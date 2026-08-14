@@ -1,0 +1,1867 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BabySteps</title>
+    <style>
+        :root {
+            --primary: #0d9488;
+            --primary-light: #ccfbf1;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --accent-gold: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 70px;
+        }
+
+        .screen {
+            display: none;
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            font-size: 1rem;
+        }
+
+        .btn-secondary {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+            font-size: 1rem;
+            background: #fff;
+        }
+
+        input[type="date"].input-field {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* Navigation Bar unten */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 1000;
+            overflow-x: auto;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.55rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            flex: 1;
+            min-width: 45px;
+        }
+
+        .nav-item span {
+            font-size: 0.95rem;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Wochentage-Leiste */
+        .calendar-header-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        /* Kalender Grid */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .calendar-day.has-post {
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        /* Heutiger Tag Hervorhebung (14. August 2026) */
+        .calendar-day.today {
+            border: 2px solid var(--primary);
+            font-weight: 800;
+            background-color: #f0fdf4;
+        }
+
+        /* Modal Overlay */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        /* Profil Unterseiten im App-Style */
+        .subpage {
+            display: none;
+        }
+        .subpage.active {
+            display: block;
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 1rem;
+            cursor: pointer;
+            margin-bottom: 16px;
+            font-weight: 600;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+        .menu-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .menu-icon {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+        .menu-text {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+        .arrow {
+            color: #C7C7CC;
+            font-size: 1.2rem;
+        }
+        .highlight-box {
+            background-color: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. MAIN APP SCREEN -->
+    <div id="mainAppScreen" class="screen active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="margin: 0;">BabySteps</h2>
+            <button onclick="showAddChildScreen()" class="btn" style="width: auto; padding: 8px 14px; font-size: 0.85rem;">+ Kind hinzufügen</button>
+        </div>
+
+        <!-- Dashboard Kinderliste -->
+        <div id="kidsDashboard"></div>
+
+        <!-- Kalender Card -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 id="currentMonthTitle" style="margin: 0; font-size: 1.1rem;">Kalender</h3>
+                <button id="calendarToggleBtn" onclick="toggleCalendar()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;">📅 Kalender einklappen</button>
+            </div>
+            <div id="calendarContainer">
+                <!-- Wochentage Leiste -->
+                <div class="calendar-header-days">
+                    <span>Mo</span>
+                    <span>Di</span>
+                    <span>Mi</span>
+                    <span>Do</span>
+                    <span>Fr</span>
+                    <span>Sa</span>
+                    <span>So</span>
+                </div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ADD / EDIT CHILD SCREEN -->
+    <div id="addChildScreen" class="screen">
+        <h2 id="formTitle">Kind anlegen</h2>
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Name</label>
+            <input type="text" id="newName" class="input-field" placeholder="Name des Kindes">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Geschlecht (für Diagramm-Hintergrund)</label>
+            <select id="newGender" class="input-field">
+                <option value="male">Junge (Babyblau)</option>
+                <option value="female">Mädchen (Hellrosa)</option>
+            </select>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Art des Datums</label>
+            <select id="newDateType" class="input-field" onchange="updateDateLabel()">
+                <option value="et">Entbindungstermin (ET)</option>
+                <option value="geburtstag">Tatsächlicher Geburtstag</option>
+            </select>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelDateInput">Errechneter Geburtstermin (ET)</label>
+            <input type="date" id="newBirthDate" class="input-field">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelSizeBirth">Größe bei Geburt (optional in cm)</label>
+            <input type="number" step="0.1" id="newSize" class="input-field" placeholder="z.B. 50">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelWeightBirth">Gewicht bei Geburt (optional in kg)</label>
+            <input type="number" step="0.01" id="newWeight" class="input-field" placeholder="z.B. 3.45">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Profilbild / Avatar</label>
+            <input type="file" id="newImageFile" class="input-field" accept="image/*">
+
+            <button onclick="saveNewChildData()" class="btn" style="margin-top: 10px;">Speichern</button>
+            <button onclick="showMainAppScreen()" class="btn btn-secondary" style="margin-top: 8px;">Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- 3. GALLERY SCREEN -->
+    <div id="galleryScreen" class="screen">
+        <h2>Galerie</h2>
+        <div class="card">
+            <div id="fullGalleryGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- 4. GROWTH SCREEN (Größe & Gewicht) -->
+    <div id="growthScreen" class="screen">
+        <h2>Entwicklung</h2>
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Kind auswählen</label>
+            <select id="growthChildSelect" class="input-field" onchange="renderGrowthData()"></select>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Datum der Messung</label>
+            <input type="date" id="growthDateInput" class="input-field">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelGrowthSize">Größe (cm)</label>
+            <input type="number" step="0.1" id="growthSizeInput" class="input-field" placeholder="z.B. 55">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelGrowthWeight">Gewicht (kg)</label>
+            <input type="number" step="0.01" id="growthWeightInput" class="input-field" placeholder="z.B. 4.2">
+
+            <div id="growthFormButtons">
+                <button onclick="saveGrowthEntry()" class="btn" id="saveGrowthBtn">Messung eintragen</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div id="chartContainer" style="width: 100%; overflow-x: auto;"></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 1.1rem;">Messwerte-Tabelle</h3>
+            <div id="growthHistoryList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+    </div>
+
+    <!-- 5. PREGNANCY SCREEN (Schwangerschaft & Frauenarzt) -->
+    <div id="pregnancyScreen" class="screen">
+        <h2>Schwangerschaft & Baby 🤰</h2>
+        
+        <div class="card" style="background: linear-gradient(135deg, var(--primary-light), #f0fdf4); border: 1px solid var(--primary);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <h3 style="margin: 0; font-size: 1.1rem; color: var(--primary);" id="pregWidgetTitle">Status</h3>
+                <span id="pregFruitIcon" style="font-size: 2rem;">👶</span>
+            </div>
+            <div id="pregWidgetDetails" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.5;">
+                Bitte wähle unten ein Kind aus.
+            </div>
+        </div>
+
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Kind auswählen</label>
+            <select id="pregChildSelect" class="input-field" onchange="renderPregnancyData()"></select>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Datum der Untersuchung</label>
+            <input type="date" id="pregDateInput" class="input-field">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelPregSize">Größe des Babys im Bauch (cm, opt.)</label>
+            <input type="number" step="0.1" id="pregSizeInput" class="input-field" placeholder="z.B. 15.2">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelPregWeight">Gewicht des Babys im Bauch (opt.)</label>
+            <input type="number" step="0.01" id="pregWeightInput" class="input-field" placeholder="z.B. 250 (in g) oder 0.25 (in kg)">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Notizen vom Frauenarzt</label>
+            <textarea id="pregNoteInput" class="input-field" rows="2" placeholder="z.B. Alles zeitgerecht entwickelt, nächste Kontrolle in 4 Wochen..."></textarea>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Ultraschallbild(er) hinzufügen</label>
+            <input type="file" id="pregMediaInput" class="input-field" accept="image/*" multiple>
+
+            <div id="pregFormButtons">
+                <button onclick="savePregnancyEntry()" class="btn" id="savePregBtn">Untersuchung eintragen</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 1.1rem;">Ultraschall-Galerie</h3>
+            <div id="pregGalleryGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;"></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 1.1rem;">Verlaufskurve (Baby im Bauch)</h3>
+            <div id="pregChartContainer" style="width: 100%; overflow-x: auto;"></div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 1.1rem;">Untersuchungen & Notizen</h3>
+            <div id="pregHistoryList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+    </div>
+
+    <!-- 6. WISHLIST SCREEN (Wunschliste) -->
+    <div id="wishlistScreen" class="screen">
+        <h2>Wunschliste 🎁</h2>
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Kind auswählen</label>
+            <select id="wishChildSelect" class="input-field" onchange="renderWishlist()"></select>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Wunsch / Geschenk</label>
+            <input type="text" id="wishTitleInput" class="input-field" placeholder="z.B. Legosteine, Winterjacke Gr. 80">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Anlass (optional)</label>
+            <input type="text" id="wishOccasionInput" class="input-field" placeholder="z.B. Weihnachten, 1. Geburtstag">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Link zum Produkt (optional)</label>
+            <input type="url" id="wishLinkInput" class="input-field" placeholder="https://...">
+
+            <button onclick="saveWishItem()" class="btn">Wunsch hinzufügen</button>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 1.1rem;">Gesammelte Wünsche</h3>
+            <div id="wishlistContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+    </div>
+
+    <!-- 7. PROFIL SCREEN & UNTERSEITEN -->
+    <div id="profileScreen" class="screen">
+        
+        <div id="profileMainView">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="margin: 0;" id="profileHeaderName">Profil (Marco)</h2>
+                <button onclick="switchNav('mainAppScreen', document.querySelector('.bottom-nav .nav-item'))" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 0.85rem;">Schließen</button>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0; font-size:1.1rem;">Deine Rolle festlegen</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted);">Wähle aus, wer du bist (wird als Autor bei Beiträgen verwendet):</p>
+                <select id="userRoleSelect" class="input-field" onchange="saveUserRole()">
+                    <option value="Mama 👩" id="roleOptionMama">Mama 👩</option>
+                    <option value="Papa 👨" id="roleOptionPapa">Papa 👨</option>
+                    <option value="Oma 👵">Oma 👵</option>
+                    <option value="Opa 👴">Opa 👴</option>
+                    <option value="Pate / Patin 🌟">Pate / Patin 🌟</option>
+                    <option value="Familie ❤️">Familie ❤️</option>
+                    <option value="Freunde 🤝">Freunde 🤝</option>
+                </select>
+            </div>
+
+            <div class="card" id="familyPregnancyShareCard" style="display: none;">
+                <h3 style="margin-top:0; font-size:1.1rem;">Schwangerschafts-Ansicht</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 12px;">Erlaube Freunden und Familie, den Schwangerschafts-Bereich einzusehen:</p>
+                <label style="display:flex; align-items:center; gap:10px; font-size:0.85rem; cursor:pointer;">
+                    <input type="checkbox" id="settingPregShare" onchange="saveSettings()"> Für Familie & Freunde freigeben
+                </label>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0; color:var(--text-muted); text-transform:uppercase; font-size:0.8rem; letter-spacing:0.5px; margin-bottom:10px;">Übersicht</h3>
+                <ul class="menu-list">
+                    <li class="menu-item" onclick="openProfileSubpage('authSubpage')">
+                        <div class="menu-item-left">
+                            <span class="menu-icon">🔑</span>
+                            <span class="menu-text">Abmelden</span>
+                        </div>
+                        <span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('settingsSubpage')">
+                        <div class="menu-item-left">
+                            <span class="menu-icon">⚙️</span>
+                            <span class="menu-text">Einstellungen</span>
+                        </div>
+                        <span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('contactSubpage')">
+                        <div class="menu-item-left">
+                            <span class="menu-icon">✉️</span>
+                            <span class="menu-text">Kontakt & Support</span>
+                        </div>
+                        <span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('referralSubpage')">
+                        <div class="menu-item-left">
+                            <span class="menu-icon">📢</span>
+                            <span class="menu-text">Weitersagen</span>
+                        </div>
+                        <span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('termsSubpage')">
+                        <div class="menu-item-left">
+                            <span class="menu-icon">📄</span>
+                            <span class="menu-text">Nutzungsbedingungen</span>
+                        </div>
+                        <span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('privacySubpage')">
+                        <div class="menu-item-left">
+                            <span class="menu-icon">🔒</span>
+                            <span class="menu-text">Datenschutzrichtlinie</span>
+                        </div>
+                        <span class="arrow">›</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="card" style="text-align: center;">
+                <h3 style="margin-top:0; font-size:1.1rem;">Familie einladen</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Teile den Fortschritt mit Familie & Freunden via WhatsApp:</p>
+                <button onclick="sendWhatsAppInvite()" class="btn" style="background: #25D366;">📲 Per WhatsApp einladen</button>
+            </div>
+
+            <div id="proSectionCard" class="card" style="border: 2px solid var(--accent-gold); display: none;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                    <span style="font-size:1.4rem;">👑</span>
+                    <h3 style="margin:0; font-size:1.1rem; color:var(--accent-gold);">BabySteps Familie PRO</h3>
+                </div>
+                <p style="font-size:0.85rem; color:var(--text-muted); line-height:1.4;">
+                    Schalte unbegrenzten Cloud-Speicher für Videos, automatische Backups und exklusive Fotobücher frei! Einmalig bezahlen, unbegrenzt nutzen.
+                </p>
+                <ul style="font-size:0.85rem; color:var(--text-main); padding-left:18px; margin-bottom:14px;">
+                    <li>Unbegrenzte Video-Uploads</li>
+                    <li>Echtzeit-Synchronisation für beide Elternteile</li>
+                    <li>Monatlicher PDF-Fotobuch-Export</li>
+                </ul>
+                <button onclick="alert('Vielen Dank für dein Interesse an BabySteps PRO! Die einmalige Freischaltung für 19,99 € wird in Kürze verfügbar sein.')" class="btn" style="background:var(--accent-gold); color:#fff;">PRO Mitglied werden (einmalig 19,99 €)</button>
+            </div>
+        </div>
+
+        <div id="authSubpage" class="subpage">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Abmelden</h2>
+            <div class="card">
+                <div id="authStatusContainer"></div>
+            </div>
+        </div>
+
+        <div id="contactSubpage" class="subpage">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Kontakt & Support</h2>
+            <div class="card">
+                <div class="highlight-box">
+                    💡 <strong>Tipp zur E-Mail-Adresse:</strong> Es wird dringend empfohlen, für Support-Anfragen eine separate, neue E-Mail-Adresse (z.B. eine dedizierte Support-Adresse wie <em>support@deine-domain.de</em>) anzulegen, damit private Nachrichten getrennt bleiben.
+                </div>
+                <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+                    Hast du Fragen, Feedback oder benötigst Hilfe bei der App? Schreib uns direkt eine E-Mail oder nutze das Kontaktformular.
+                </p>
+                <div style="margin-top: 16px;">
+                    <label style="font-size: 0.85rem; color: var(--text-muted);">Deine E-Mail-Adresse</label>
+                    <input type="email" id="contactUserEmail" class="input-field" placeholder="deine-email@beispiel.de">
+
+                    <label style="font-size: 0.85rem; color: var(--text-muted);">Dein Anliegen / Nachricht</label>
+                    <textarea id="contactUserMsg" class="input-field" rows="4" placeholder="Schreibe hier dein Feedback..."></textarea>
+
+                    <button onclick="submitContactForm()" class="btn">Nachricht senden</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="settingsSubpage" class="subpage">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Einstellungen</h2>
+            
+            <div class="card">
+                <h3 style="margin-top:0; font-size:1rem; margin-bottom:12px;">Benachrichtigungen</h3>
+                <label style="display:flex; align-items:center; gap:10px; font-size:0.85rem; cursor:pointer;">
+                    <input type="checkbox" id="settingNotif" checked onchange="saveSettings()"> Push-Benachrichtigungen bei neuen Posts
+                </label>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0; font-size:1rem; margin-bottom:12px;">Einheiten</h3>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:0.85rem; color:var(--text-main);">Grösseneinheit</span>
+                    <select id="unitSize" class="input-field" style="width: 100px; margin-bottom:0;" onchange="saveSettings()">
+                        <option value="cm">cm</option>
+                        <option value="m">m</option>
+                        <option value="inch">inch</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:0.85rem; color:var(--text-main);">Gewichtseinheiten</span>
+                    <select id="unitWeight" class="input-field" style="width: 100px; margin-bottom:0;" onchange="saveSettings()">
+                        <option value="kg">kg</option>
+                        <option value="g">g</option>
+                        <option value="lb">lb</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <span style="font-size:0.85rem; color:var(--text-main);">Einheit Flüssige Nahrung</span>
+                    <select id="unitLiquid" class="input-field" style="width: 100px; margin-bottom:0;" onchange="saveSettings()">
+                        <option value="ml">ml</option>
+                        <option value="l">l</option>
+                        <option value="oz">oz</option>
+                    </select>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.85rem; color:var(--text-main);">Temperatureinheit</span>
+                    <select id="unitTemp" class="input-field" style="width: 100px; margin-bottom:0;" onchange="saveSettings()">
+                        <option value="°C">°C</option>
+                        <option value="°F">°F</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="referralSubpage" class="subpage">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Weitersagen & Belohnung sichern</h2>
+            <div class="card">
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                    Teile unsere App mit anderen werdenden Eltern und profitiert beide von exklusiven Vorteilen!
+                </p>
+                <div class="highlight-box">
+                    <strong>Dein Vorteil:</strong> Wenn du anderen werdenden Eltern die App empfiehlst und sie sich registrieren, erhalten die neuen Eltern <strong>10% Rabatt</strong> auf Premium-Inhalte und du erhältst <strong>10% Cashback</strong> direkt als Gutschrift!
+                </div>
+                <button onclick="sendWhatsAppInvite()" class="btn" style="background: #25D366;">📢 App jetzt weiterempfehlen</button>
+            </div>
+        </div>
+
+        <div id="termsSubpage" class="subpage">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Nutzungsbedingungen</h2>
+            <div class="card" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-muted);">
+                <p><strong>1. Geltungsbereich und Vertragsgegenstand</strong><br>
+                Die Nutzung der Web-App „BabySteps“ unterliegt diesen Allgemeinen Nutzungsbedingungen (ANB). Mit der Nutzung erklärst du dich einverstanden.</p>
+                <p><strong>2. Leistungsbeschreibung</strong><br>
+                Die App dient als digitaler Begleiter für Familien zur Dokumentation von Schwangerschaftsdaten, Entwicklungsmeilensteinen und Notizen.</p>
+                <p><strong>3. Haftungsausschluss für medizinische Inhalte</strong><br>
+                Alle angezeigten Wachstumsverläufe und Arztnotizen ersetzen keinesfalls eine professionelle medizinische Beratung durch Fachpersonal.</p>
+                <p><strong>4. Pflichten der Nutzer</strong><br>
+                Du bist für hochgeladene Inhalte selbst verantwortlich und verpflichtest dich zur Einhaltung geltender Gesetze.</p>
+            </div>
+        </div>
+
+        <div id="privacySubpage" class="subpage">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Datenschutzrichtlinie</h2>
+            <div class="card" style="font-size: 0.9rem; line-height: 1.6; color: var(--text-muted);">
+                <p><strong>1. Datenschutz auf einen Blick</strong><br>
+                Ihre Familiendaten gehören Ihnen! Der Schutz Ihrer Privatsphäre hat für uns oberste Priorität.</p>
+                <p><strong>2. Lokale Datenspeicherung (LocalStorage)</strong><br>
+                Sämtliche eingegebenen Daten werden standardmäßig <strong>lokal direkt in Ihrem Browser</strong> gespeichert und nicht an zentrale Server übertragen.</p>
+                <p><strong>3. Ihre Betroffenenrechte</strong><br>
+                Sie haben jederzeit die volle Kontrolle über Ihre Daten und können Einträge jederzeit komplett löschen.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 8. STATS SCREEN -->
+    <div id="statsScreen" class="screen">
+        <h2>Statistik</h2>
+        <div class="card">
+            <div id="statsContent" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        </div>
+    </div>
+
+    <!-- MODAL: Beitrag erstellen / bearbeiten -->
+    <div id="dayModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalDayTitle" style="margin-top: 0;">Beitrag erstellen</h3>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Für welches Kind?</label>
+            <select id="postChildSelect" class="input-field"></select>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Autor</label>
+            <input type="text" id="postAuthorInput" class="input-field" readonly style="background:#f1f5f9; color:var(--text-muted);">
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Notiz / Text</label>
+            <textarea id="dayNoteInput" class="input-field" rows="3" placeholder="Was ist heute passiert?"></textarea>
+
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Bilder oder Videos hinzufügen</label>
+            <input type="file" id="dayMediaInput" class="input-field" accept="image/*,video/*" multiple>
+
+            <div id="savedPostsList" style="margin-bottom: 12px;"></div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="saveDayPost()" class="btn" id="savePostBtn">Speichern</button>
+                <button onclick="closeDayModal()" class="btn btn-secondary">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Beitrag anzeigen -->
+    <div id="viewPostModal" class="modal">
+        <div class="modal-content">
+            <h3 id="viewPostTitle" style="margin-top: 0;">Beitrag</h3>
+            <div id="viewPostContent" style="margin-bottom: 16px;"></div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="editCurrentViewPost()" class="btn" style="background: #f1f5f9; color: var(--text-main); flex: 1;">✏️ Bearbeiten</button>
+                    <button onclick="deleteCurrentViewPost()" class="btn" style="background: #fee2e2; color: #dc2626; flex: 1;">🗑️ Löschen</button>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="openCreateFromView()" class="btn" style="background: #f1f5f9; color: var(--text-main); flex: 1;">➕ Weiteren Eintrag hinzufügen</button>
+                    <button onclick="closeViewPostModal()" class="btn btn-secondary" style="flex: 1;">Schließen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchNav('mainAppScreen', this)"><span>🏠</span>Home</button>
+        <button class="nav-item" onclick="switchNav('galleryScreen', this)"><span>🖼️</span>Galerie</button>
+        <button class="nav-item" onclick="switchNav('growthScreen', this)"><span>📈</span>Größe</button>
+        <button class="nav-item" id="navPregnancyItem" onclick="switchNav('pregnancyScreen', this)" style="display: none;"><span>🤰</span>Schwanger</button>
+        <button class="nav-item" onclick="switchNav('wishlistScreen', this)"><span>🎁</span>Wünsche</button>
+        <button class="nav-item" onclick="switchNav('profileScreen', this)"><span>👤</span>Profil</button>
+        <button class="nav-item" onclick="switchNav('statsScreen', this)"><span>📊</span>Stats</button>
+    </div>
+
+    <!-- LOGIK -->
+    <script>
+        let kids = [];
+        let allPosts = {};
+        let growthData = {}; 
+        let pregnancyData = {};
+        let wishlistData = {};
+        let currentUserRole = "Papa 👨";
+        let assignedRoles = { mama: null, papa: null };
+        let appUnits = { size: 'cm', weight: 'kg', liquid: 'ml', temp: '°C' };
+        let appSettings = { notif: true, pregShare: false };
+        let isLoggedIn = true;
+
+        try {
+            kids = JSON.parse(localStorage.getItem('request_kids')) || JSON.parse(localStorage.getItem('BabySteps_kids')) || [];
+            allPosts = JSON.parse(localStorage.getItem('request_posts')) || JSON.parse(localStorage.getItem('BabySteps_posts')) || {};
+            growthData = JSON.parse(localStorage.getItem('request_growth')) || JSON.parse(localStorage.getItem('BabySteps_growth')) || {};
+            pregnancyData = JSON.parse(localStorage.getItem('request_pregnancy')) || JSON.parse(localStorage.getItem('BabySteps_pregnancy')) || {};
+            wishlistData = JSON.parse(localStorage.getItem('request_wishlist')) || JSON.parse(localStorage.getItem('BabySteps_wishlist')) || {};
+            currentUserRole = localStorage.getItem('request_userRole') || localStorage.getItem('BabySteps_userRole') || "Papa 👨";
+            
+            let savedAssignedRoles = JSON.parse(localStorage.getItem('request_assignedRoles')) || JSON.parse(localStorage.getItem('BabySteps_assignedRoles'));
+            if (savedAssignedRoles) assignedRoles = savedAssignedRoles;
+
+            let savedUnits = JSON.parse(localStorage.getItem('request_units')) || JSON.parse(localStorage.getItem('BabySteps_units'));
+            if (savedUnits) appUnits = savedUnits;
+
+            let savedSettings = JSON.parse(localStorage.getItem('request_settings')) || JSON.parse(localStorage.getItem('BabySteps_settings'));
+            if (savedSettings) appSettings = savedSettings;
+
+            let savedLogin = localStorage.getItem('request_isLoggedIn') || localStorage.getItem('BabySteps_isLoggedIn');
+            if (savedLogin !== null) isLoggedIn = JSON.parse(savedLogin);
+        } catch(e) {
+            console.error("Fehler beim Lesen aus localStorage:", e);
+        }
+
+        let editingIndex = null;
+        let editingGrowthIndex = null;
+        let editingPregIndex = null;
+        let selectedDayForModal = null;
+        let editingPostIndex = null;
+        let viewingPostIndex = null;
+        let isCalendarExpanded = true;
+        let currentAvatarOverride = null; 
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateRoleSelectOptions();
+
+            let roleSelect = document.getElementById('userRoleSelect');
+            if (roleSelect) roleSelect.value = currentUserRole;
+
+            let profileHeaderName = document.getElementById('profileHeaderName');
+            if (profileHeaderName) profileHeaderName.innerText = `Profil (${currentUserRole.split(' ')[0]})`;
+
+            let settingNotif = document.getElementById('settingNotif');
+            if (settingNotif) settingNotif.checked = appSettings.notif;
+
+            let settingPregShare = document.getElementById('settingPregShare');
+            if (settingPregShare) settingPregShare.checked = appSettings.pregShare;
+
+            document.getElementById('unitSize').value = appUnits.size;
+            document.getElementById('unitWeight').value = appUnits.weight;
+            document.getElementById('unitLiquid').value = appUnits.liquid;
+            document.getElementById('unitTemp').value = appUnits.temp;
+
+            updateUnitLabels();
+            updateProVisibility();
+            updatePregnancyNavVisibility();
+            renderAuthStatus();
+
+            kids.forEach((kid, idx) => {
+                if (kid.birthDate && kid.dateType && kid.dateType.toLowerCase() === 'et') {
+                    ensureOvulationPoint(idx, kid.birthDate);
+                }
+            });
+            showMainAppScreen();
+        });
+
+        function updateDateLabel() {
+            let type = document.getElementById('newDateType').value;
+            let label = document.getElementById('labelDateInput');
+            if (type === 'et') {
+                label.innerText = "Errechneter Geburtstermin (ET)";
+            } else {
+                label.innerText = "Tatsächlicher Geburtstag";
+            }
+        }
+
+        function updateRoleSelectOptions() {
+            let mamaOpt = document.getElementById('roleOptionMama');
+            let papaOpt = document.getElementById('roleOptionPapa');
+            if (!mamaOpt || !papaOpt) return;
+
+            if (assignedRoles.mama && assignedRoles.mama !== currentUserRole) {
+                mamaOpt.disabled = true;
+                mamaOpt.innerText = "Mama 👩 (Bereits vergeben)";
+            } else {
+                mamaOpt.disabled = false;
+                mamaOpt.innerText = "Mama 👩";
+            }
+
+            if (assignedRoles.papa && assignedRoles.papa !== currentUserRole) {
+                papaOpt.disabled = true;
+                papaOpt.innerText = "Papa 👨 (Bereits vergeben)";
+            } else {
+                papaOpt.disabled = false;
+                papaOpt.innerText = "Papa 👨";
+            }
+        }
+
+        function saveUserRole() {
+            let roleSelect = document.getElementById('userRoleSelect');
+            if (!roleSelect) return;
+
+            let selectedVal = roleSelect.value;
+
+            if (selectedVal.includes("Mama")) {
+                if (assignedRoles.mama && assignedRoles.mama !== currentUserRole) {
+                    alert("Diese Option ist bereits für Mama vergeben!");
+                    roleSelect.value = currentUserRole;
+                    return;
+                }
+                assignedRoles.mama = selectedVal;
+            } else if (selectedVal.includes("Papa")) {
+                if (assignedRoles.papa && assignedRoles.papa !== currentUserRole) {
+                    alert("Diese Option ist bereits für Papa vergeben!");
+                    roleSelect.value = currentUserRole;
+                    return;
+                }
+                assignedRoles.papa = selectedVal;
+            }
+
+            currentUserRole = selectedVal;
+            localStorage.setItem('request_userRole', currentUserRole);
+            localStorage.setItem('request_assignedRoles', JSON.stringify(assignedRoles));
+
+            updateRoleSelectOptions();
+
+            let profileHeaderName = document.getElementById('profileHeaderName');
+            if (profileHeaderName) profileHeaderName.innerText = `Profil (${currentUserRole.split(' ')[0]})`;
+            updateProVisibility();
+            updatePregnancyNavVisibility();
+        }
+
+        function updatePregnancyNavVisibility() {
+            let navItem = document.getElementById('navPregnancyItem');
+            let shareCard = document.getElementById('familyPregnancyShareCard');
+            if (!navItem || !shareCard) return;
+
+            let isMomOrDad = currentUserRole.includes("Mama") || currentUserRole.includes("Papa");
+            
+            if (isMomOrDad) {
+                shareCard.style.display = 'block';
+                navItem.style.display = 'flex';
+            } else {
+                shareCard.style.display = 'none';
+                if (appSettings.pregShare) {
+                    navItem.style.display = 'flex';
+                } else {
+                    navItem.style.display = 'none';
+                    let pregScreen = document.getElementById('pregnancyScreen');
+                    if (pregScreen && pregScreen.classList.contains('active')) {
+                        showMainAppScreen();
+                    }
+                }
+            }
+        }
+
+        function openProfileSubpage(subpageId) {
+            document.getElementById('profileMainView').style.display = 'none';
+            document.querySelectorAll('#profileScreen .subpage').forEach(page => page.classList.remove('active'));
+            document.getElementById(subpageId).classList.add('active');
+            if (subpageId === 'authSubpage') renderAuthStatus();
+        }
+
+        function closeProfileSubpage() {
+            document.querySelectorAll('#profileScreen .subpage').forEach(page => page.classList.remove('active'));
+            document.getElementById('profileMainView').style.display = 'block';
+        }
+
+        function renderAuthStatus() {
+            let container = document.getElementById('authStatusContainer');
+            if (!container) return;
+            
+            if (isLoggedIn) {
+                container.innerHTML = `
+                    <div class="highlight-box">
+                        🟢 Du bist aktuell angemeldet als <strong>${currentUserRole}</strong>.
+                    </div>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:16px;">
+                        Wenn du dich abmeldest, musst du dich beim nächsten Öffnen der App neu verifizieren.
+                    </p>
+                    <button onclick="handleLogout()" class="btn" style="background:#fee2e2; color:#dc2626;">🔒 Abmelden</button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="highlight-box">
+                        🔴 Du bist aktuell abgemeldet.
+                    </div>
+                    <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:16px;">
+                        Möchtest du dich wieder anmelden?
+                    </p>
+                    <button onclick="handleLogin()" class="btn">🔑 Wieder Anmelden</button>
+                `;
+            }
+        }
+
+        function handleLogout() {
+            isLoggedIn = false;
+            localStorage.setItem('request_isLoggedIn', JSON.stringify(isLoggedIn));
+            renderAuthStatus();
+            alert("Erfolgreich abgemeldet!");
+        }
+
+        function handleLogin() {
+            isLoggedIn = true;
+            localStorage.setItem('request_isLoggedIn', JSON.stringify(isLoggedIn));
+            renderAuthStatus();
+            alert("Erfolgreich angemeldet!");
+        }
+
+        function submitContactForm() {
+            let email = document.getElementById('contactUserEmail').value.trim();
+            let msg = document.getElementById('contactUserMsg').value.trim();
+            if (!email || !msg) {
+                alert("Bitte fülle deine E-Mail-Adresse und deine Nachricht aus.");
+                return;
+            }
+            alert(`Vielen Dank! Deine Nachricht wurde erfolgreich gesendet. Wir werden uns bald bei ${email} melden.`);
+            document.getElementById('contactUserEmail').value = '';
+            document.getElementById('contactUserMsg').value = '';
+            closeProfileSubpage();
+        }
+
+        function updateProVisibility() {
+            let proCard = document.getElementById('proSectionCard');
+            if (!proCard) return;
+            proCard.style.display = (currentUserRole.includes("Mama") || currentUserRole.includes("Papa")) ? 'block' : 'none';
+        }
+
+        function saveSettings() {
+            appSettings = {
+                notif: document.getElementById('settingNotif').checked,
+                pregShare: document.getElementById('settingPregShare') ? document.getElementById('settingPregShare').checked : appSettings.pregShare
+            };
+            localStorage.setItem('request_settings', JSON.stringify(appSettings));
+
+            appUnits = {
+                size: document.getElementById('unitSize').value,
+                weight: document.getElementById('unitWeight').value,
+                liquid: document.getElementById('unitLiquid').value,
+                temp: document.getElementById('unitTemp').value
+            };
+            localStorage.setItem('request_units', JSON.stringify(appUnits));
+
+            updateUnitLabels();
+            updatePregnancyNavVisibility();
+            renderDashboard();
+        }
+
+        function updateUnitLabels() {
+            let labelSizeBirth = document.getElementById('labelSizeBirth');
+            if (labelSizeBirth) labelSizeBirth.innerText = `Größe bei Geburt (optional in ${appUnits.size})`;
+
+            let labelWeightBirth = document.getElementById('labelWeightBirth');
+            if (labelWeightBirth) labelWeightBirth.innerText = `Gewicht bei Geburt (optional in ${appUnits.weight})`;
+
+            let labelGrowthSize = document.getElementById('labelGrowthSize');
+            if (labelGrowthSize) labelGrowthSize.innerText = `Größe (${appUnits.size})`;
+
+            let labelGrowthWeight = document.getElementById('labelGrowthWeight');
+            if (labelGrowthWeight) labelGrowthWeight.innerText = `Gewicht (${appUnits.weight})`;
+
+            let labelPregSize = document.getElementById('labelPregSize');
+            if (labelPregSize) labelPregSize.innerText = `Größe des Babys im Bauch (${appUnits.size}, opt.)`;
+
+            let labelPregWeight = document.getElementById('labelPregWeight');
+            if (labelPregWeight) labelPregWeight.innerText = `Gewicht des Babys im Bauch (${appUnits.weight}, opt.)`;
+        }
+
+        function ensureOvulationPoint(childIndex, birthDate) {
+            let etDate = new Date(birthDate);
+            if (isNaN(etDate.getTime())) return;
+
+            let ovulationDate = new Date(etDate);
+            ovulationDate.setDate(etDate.getDate() - 266);
+            let ovulationDateStr = ovulationDate.toISOString().split('T')[0];
+
+            if (!growthData[childIndex]) growthData[childIndex] = [];
+
+            let hasZeroPoint = growthData[childIndex].some(item => Number(item.size) === 0 && Number(item.weight) === 0);
+
+            if (!hasZeroPoint) {
+                growthData[childIndex].unshift({ date: ovulationDateStr, size: "0", weight: "0" });
+            } else {
+                growthData[childIndex].forEach(item => {
+                    if (Number(item.size) === 0 && Number(item.weight) === 0) {
+                        item.date = ovulationDateStr;
+                    }
+                });
+            }
+
+            growthData[childIndex].sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('request_growth', JSON.stringify(growthData));
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            let target = document.getElementById(screenId);
+            if (target) target.classList.add('active');
+        }
+
+        function switchNav(screenId, btnElement) {
+            switchScreen(screenId);
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if (btnElement) btnElement.classList.add('active');
+
+            if (screenId === 'profileScreen') closeProfileSubpage();
+            if (screenId === 'galleryScreen') renderGallery();
+            if (screenId === 'growthScreen') initGrowthScreen();
+            if (screenId === 'pregnancyScreen') initPregnancyScreen();
+            if (screenId === 'wishlistScreen') initWishlistScreen();
+            if (screenId === 'statsScreen') renderStats();
+        }
+
+        function showMainAppScreen() {
+            renderDashboard();
+            renderCalendar();
+            switchScreen('mainAppScreen');
+            document.querySelectorAll('.nav-item').forEach((el, idx) => {
+                if(idx === 0) el.classList.add('active');
+                else el.classList.remove('active');
+            });
+        }
+
+        function showAddChildScreen() {
+            editingIndex = null;
+            currentAvatarOverride = null;
+            document.getElementById('formTitle').innerText = "Kind anlegen";
+            document.getElementById('newName').value = '';
+            document.getElementById('newGender').value = 'male';
+            document.getElementById('newDateType').value = 'et';
+            document.getElementById('newBirthDate').value = '';
+            document.getElementById('newSize').value = '';
+            document.getElementById('newWeight').value = '';
+            document.getElementById('newImageFile').value = '';
+            updateDateLabel();
+            switchScreen('addChildScreen');
+        }
+
+        function toggleCalendar() {
+            isCalendarExpanded = !isCalendarExpanded;
+            document.getElementById('calendarContainer').style.display = isCalendarExpanded ? 'block' : 'none';
+            document.getElementById('calendarToggleBtn').innerText = isCalendarExpanded ? '📅 Kalender einklappen' : '📅 Kalender ausklappen';
+        }
+
+        function calculateAgeString(birthDateStr) {
+            let birthDate = new Date(birthDateStr);
+            let today = new Date();
+            let diffTime = today - birthDate;
+            let diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) return "Noch nicht geboren (Zukunft)";
+            if (diffDays === 0) return "Heute geboren (0 Tage)";
+            if (diffDays < 31) return `${diffDays} Tag(e) alt`;
+            if (diffDays < 365) {
+                let months = Math.floor(diffDays / 30.44);
+                return `${months} Monat(e) alt`;
+            }
+            let years = (diffDays / 365.25).toFixed(1);
+            return `ca. ${years} Jahr(e) alt`;
+        }
+
+        function renderDashboard() {
+            let container = document.getElementById('kidsDashboard');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (kids.length === 0) {
+                container.innerHTML = '<div class="card"><p style="color:var(--text-muted); margin:0;">Noch keine Kinder angelegt. Lege jetzt dein erstes Kind an!</p></div>';
+                return;
+            }
+
+            kids.forEach((kid, index) => {
+                let lastPost = getLastPostForChild(index);
+                let latestGrowth = getLatestGrowth(index);
+
+                let displaySize = latestGrowth ? latestGrowth.size : kid.size;
+                let displayWeight = latestGrowth ? latestGrowth.weight : kid.weight;
+                let displayDateText = latestGrowth ? `(vom ${latestGrowth.date})` : '';
+
+                let subInfoText = "";
+                let typeVal = kid.dateType ? kid.dateType.toLowerCase() : 'et';
+                if (typeVal === 'geburtstag') {
+                    let ageStr = kid.birthDate ? calculateAgeString(kid.birthDate) : '-';
+                    subInfoText = `Geburtstag: ${kid.birthDate || '-'} (${ageStr})`;
+                } else {
+                    subInfoText = `ET: ${kid.birthDate || '-'}`;
+                }
+
+                let card = document.createElement('div');
+                card.className = 'card';
+
+                let lastPostHtml = '';
+                if (lastPost) {
+                    let firstMedia = (lastPost.media && lastPost.media.length > 0) ? lastPost.media[0] : null;
+                    let firstSrc = firstMedia ? ((typeof firstMedia === 'string') ? firstMedia : firstMedia.url) : null;
+                    let imgHtml = firstSrc ? `<img src="${firstSrc}" style="width:50px; height:50px; border-radius:8px; object-fit:cover;">` : `<div style="width:50px; height:50px; background:#ddd; display:flex; align-items:center; justify-content:center; font-size:1.2rem; border-radius:8px;">📝</div>`;
+                    
+                    let now = new Date();
+                    let formattedDateStr = `${String(lastPost.day).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+
+                    lastPostHtml = `
+                        <div style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: #64748b; margin-bottom: 6px;"><span>Letzter Post vom ${formattedDateStr}</span><span>🕒 Neu</span></div>
+                            <div onclick="openViewPostModal(${lastPost.day}, ${index})" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                ${imgHtml}
+                                <div style="font-size: 0.9rem; color: #1e293b; font-weight: 500;">${lastPost.text || 'Bild/Video Beitrag'}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    lastPostHtml = `
+                        <div style="margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                            <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 4px;">Letzter Post</div>
+                            <div style="font-size: 0.8rem; color: #94a3b8;">Noch kein Beitrag vorhanden.</div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <img src="${kid.avatar || 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=150'}" style="width:60px; height:60px; border-radius:50%; object-fit:cover;">
+                        <div>
+                            <h3 style="margin:0; font-size: 1.1rem;">${kid.name}</h3>
+                            <p style="margin:5px 0 0; font-size:0.85rem; color:#64748b;">${subInfoText}<br>Größe: ${displaySize ? displaySize + ' ' + appUnits.size : '-'} | Gewicht: ${displayWeight || '-'} ${appUnits.weight} <span style="font-size:0.75rem; color:var(--primary);">${displayDateText}</span></p>
+                        </div>
+                    </div>
+                    ${lastPostHtml}
+                    <div style="margin-top:15px; display:flex; gap:10px;">
+                        <button onclick="openEditChild(${index})" style="background:#f1f5f9; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:0.85rem;">✏️ Bearbeiten</button>
+                        <button onclick="deleteChild(${index})" style="background:#fee2e2; color:#dc2626; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:0.85rem;">🗑️ Löschen</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function getLastPostForChild(childIndex) {
+            let allDays = Object.keys(allPosts);
+            if (allDays.length === 0) return null;
+            let validDays = allDays.filter(day => allPosts[day] && allPosts[day].some(p => p && p.childIndex === childIndex));
+            if (validDays.length === 0) return null;
+            validDays.sort((a, b) => Number(b) - Number(a));
+            let latestDay = validDays[0];
+            let childPost = [...allPosts[latestDay]].reverse().find(p => p && p.childIndex === childIndex);
+            return childPost ? { ...childPost, day: latestDay } : null;
+        }
+
+        function getLatestGrowth(childIndex) {
+            let list = growthData[childIndex];
+            if (!list || list.length === 0) return null;
+            let validItems = list.filter(i => Number(i.size) > 0 || Number(i.weight) > 0);
+            return validItems.length > 0 ? validItems[validItems.length - 1] : list[list.length - 1];
+        }
+
+        function saveNewChildData() {
+            let name = document.getElementById('newName').value.trim();
+            if (!name) { alert("Bitte gib einen Namen ein."); return; }
+
+            let kidData = {
+                name: name,
+                gender: document.getElementById('newGender').value,
+                dateType: document.getElementById('newDateType').value,
+                birthDate: document.getElementById('newBirthDate').value,
+                size: document.getElementById('newSize').value,
+                weight: document.getElementById('newWeight').value,
+                avatar: currentAvatarOverride || (document.getElementById('newImageFile').files[0] ? URL.createObjectURL(document.getElementById('newImageFile').files[0]) : (editingIndex !== null ? kids[editingIndex].avatar : 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=150'))
+            };
+
+            let targetIndex = editingIndex !== null ? editingIndex : kids.length;
+            if (editingIndex !== null) kids[editingIndex] = kidData;
+            else kids.push(kidData);
+
+            localStorage.setItem('request_kids', JSON.stringify(kids));
+            if (kidData.birthDate && kidData.dateType && kidData.dateType.toLowerCase() === 'et') ensureOvulationPoint(targetIndex, kidData.birthDate);
+            showMainAppScreen();
+        }
+
+        function openEditChild(index) {
+            editingIndex = index;
+            currentAvatarOverride = null;
+            let kid = kids[index];
+            document.getElementById('formTitle').innerText = "Kind bearbeiten";
+            document.getElementById('newName').value = kid.name || '';
+            document.getElementById('newGender').value = kid.gender || 'male';
+            document.getElementById('newDateType').value = kid.dateType || 'et';
+            document.getElementById('newBirthDate').value = kid.birthDate || '';
+            document.getElementById('newSize').value = kid.size || '';
+            document.getElementById('newWeight').value = kid.weight || '';
+            document.getElementById('newImageFile').value = '';
+            updateDateLabel();
+            switchScreen('addChildScreen');
+        }
+
+        function deleteChild(index) {
+            if (confirm("Möchtest du dieses Kind wirklich löschen?")) {
+                kids.splice(index, 1);
+                localStorage.setItem('request_kids', JSON.stringify(kids));
+                renderDashboard();
+            }
+        }
+
+        function renderCalendar() {
+            let grid = document.getElementById('calendarGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            let now = new Date();
+            document.getElementById('currentMonthTitle').innerText = now.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+
+            let daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            for (let i = 1; i <= daysInMonth; i++) {
+                let cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                cell.innerText = i;
+                
+                if (i === now.getDate() && now.getMonth() === 7 && now.getFullYear() === 2026) {
+                    cell.classList.add('today');
+                }
+
+                if (allPosts[i] && allPosts[i].length > 0) cell.classList.add('has-post');
+                cell.onclick = () => onCalendarDayClick(i);
+                grid.appendChild(cell);
+            }
+        }
+
+        function onCalendarDayClick(day) {
+            selectedDayForModal = day;
+            let posts = allPosts[day];
+            if (posts && posts.length > 0) openViewPostModal(day, posts[posts.length - 1].childIndex, posts.length - 1);
+            else openDayModal(day);
+        }
+
+        function openDayModal(day, postIndexToEdit = null) {
+            selectedDayForModal = day;
+            editingPostIndex = postIndexToEdit;
+            
+            document.getElementById('modalDayTitle').innerText = editingPostIndex !== null ? `Beitrag bearbeiten (${day}. Tag)` : `Eintrag für den ${day}. Tag`;
+            document.getElementById('savePostBtn').innerText = editingPostIndex !== null ? "Änderungen speichern" : "Speichern";
+            document.getElementById('postAuthorInput').value = currentUserRole;
+            document.getElementById('dayNoteInput').value = editingPostIndex !== null && allPosts[day] ? allPosts[day][editingPostIndex].text || '' : '';
+            document.getElementById('dayMediaInput').value = '';
+
+            let select = document.getElementById('postChildSelect');
+            select.innerHTML = kids.length === 0 ? '<option>Bitte zuerst ein Kind anlegen</option>' : '';
+            kids.forEach((k, idx) => {
+                let opt = document.createElement('option');
+                opt.value = idx;
+                opt.innerText = k.name;
+                if (editingPostIndex !== null && allPosts[day] && allPosts[day][editingPostIndex] && allPosts[day][editingPostIndex].childIndex === idx) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            renderSavedPostsForModal();
+            document.getElementById('dayModal').style.display = 'flex';
+        }
+
+        function closeDayModal() { document.getElementById('dayModal').style.display = 'none'; }
+
+        function openViewPostModal(day, targetChildIndex, postIndex = null) {
+            selectedDayForModal = day;
+            let posts = allPosts[day];
+            if (!posts || posts.length === 0) return;
+
+            let targetIdx = postIndex !== null ? postIndex : posts.findIndex(p => p.childIndex === targetChildIndex);
+            if (targetIdx === -1) targetIdx = posts.length - 1;
+            viewingPostIndex = targetIdx;
+            let post = posts[targetIdx];
+
+            let now = new Date();
+            document.getElementById('viewPostTitle').innerText = `Beitrag vom ${String(day).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+            
+            let container = document.getElementById('viewPostContent');
+            container.innerHTML = `<div style="font-weight: 600; color: var(--primary); margin-bottom: 6px;">${post.author} für ${kids[post.childIndex] ? kids[post.childIndex].name : 'Kind'}:</div><div style="margin-bottom: 12px;">${post.text || ''}</div>`;
+
+            if (post.media && post.media.length > 0) {
+                let mediaWrapper = document.createElement('div');
+                mediaWrapper.style.cssText = "display: flex; flex-direction: column; gap: 10px; margin-top: 10px;";
+                post.media.forEach(m => {
+                    let src = (typeof m === 'string') ? m : m.url;
+                    let isVideo = (typeof m === 'object' && m.type === 'video') || src.includes('video');
+                    mediaWrapper.appendChild(isVideo ? Object.assign(document.createElement('video'), { src: src, controls: true }) : Object.assign(document.createElement('img'), { src: src }));
+                    mediaWrapper.lastChild.style.cssText = "width: 100%; max-height: 250px; border-radius: 12px; object-fit: cover;";
+                });
+                container.appendChild(mediaWrapper);
+            }
+            document.getElementById('viewPostModal').style.display = 'flex';
+        }
+
+        function closeViewPostModal() { document.getElementById('viewPostModal').style.display = 'none'; }
+        function openCreateFromView() { closeViewPostModal(); openDayModal(selectedDayForModal); }
+        function editCurrentViewPost() { closeViewPostModal(); openDayModal(selectedDayForModal, viewingPostIndex); }
+
+        function deleteCurrentViewPost() {
+            if (confirm("Möchtest du diesen Beitrag wirklich löschen?")) {
+                allPosts[selectedDayForModal].splice(viewingPostIndex, 1);
+                if (allPosts[selectedDayForModal].length === 0) delete allPosts[selectedDayForModal];
+                localStorage.setItem('request_posts', JSON.stringify(allPosts));
+                closeViewPostModal();
+                renderCalendar();
+                renderDashboard();
+            }
+        }
+
+        function deletePostFromModal(day, index) {
+            if (confirm("Möchtest du diesen Eintrag wirklich löschen?")) {
+                allPosts[day].splice(index, 1);
+                if (allPosts[day].length === 0) delete allPosts[day];
+                localStorage.setItem('request_posts', JSON.stringify(allPosts));
+                renderCalendar();
+                renderDashboard();
+                renderSavedPostsForModal();
+                if (!allPosts[day] || allPosts[day].length === 0) closeDayModal();
+            }
+        }
+
+        function saveDayPost() {
+            let text = document.getElementById('dayNoteInput').value;
+            let files = document.getElementById('dayMediaInput').files;
+
+            if (!text.trim() && files.length === 0 && editingPostIndex === null) {
+                alert("Bitte schreibe eine Notiz oder wähle ein Bild/Video aus.");
+                return;
+            }
+
+            let mediaArray = files.length > 0 ? Array.from(files).map(f => ({ url: URL.createObjectURL(f), type: f.type.startsWith('video') ? 'video' : 'image' })) : (editingPostIndex !== null ? allPosts[selectedDayForModal][editingPostIndex].media : []);
+
+            let postObj = { author: currentUserRole, childIndex: Number(document.getElementById('postChildSelect').value), text: text, media: mediaArray };
+
+            if (!allPosts[selectedDayForModal]) allPosts[selectedDayForModal] = [];
+            if (editingPostIndex !== null) allPosts[selectedDayForModal][editingPostIndex] = postObj;
+            else allPosts[selectedDayForModal].push(postObj);
+
+            localStorage.setItem('request_posts', JSON.stringify(allPosts));
+            renderCalendar();
+            renderDashboard();
+            closeDayModal();
+        }
+
+        function renderSavedPostsForModal() {
+            let container = document.getElementById('savedPostsList');
+            container.innerHTML = '';
+            let posts = allPosts[selectedDayForModal];
+            if (posts && posts.length > 0) {
+                container.innerHTML = '<strong>Bereits gespeicherte Beiträge:</strong>';
+                posts.forEach((p, idx) => {
+                    let div = document.createElement('div');
+                    div.style.cssText = "background:#f1f5f9; padding:10px; border-radius:12px; margin-top:8px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;";
+                    div.innerHTML = `<div><b>${p.author}:</b> ${p.text || ''}</div><div style="display:flex; gap:6px;"><button onclick="openDayModal(${selectedDayForModal}, ${idx})">✏️</button><button onclick="deletePostFromModal(${selectedDayForModal}, ${idx})">🗑️</button></div>`;
+                    container.appendChild(div);
+                });
+            }
+        }
+
+        function renderGallery() {
+            let container = document.getElementById('fullGalleryGrid');
+            container.innerHTML = '';
+            let mediaList = [];
+            Object.keys(allPosts).forEach(day => {
+                allPosts[day].forEach(post => {
+                    if (post.media) post.media.forEach(m => mediaList.push({ day: day, media: m }));
+                });
+            });
+
+            if (mediaList.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; grid-column: span 2;">Noch keine Medien vorhanden.</p>';
+                return;
+            }
+
+            mediaList.forEach(item => {
+                let src = (typeof item.media === 'string') ? item.media : item.media.url;
+                let box = document.createElement('div');
+                box.style.cssText = "background:#f1f5f9; border-radius:12px; overflow:hidden;";
+                box.innerHTML = `<img src="${src}" style="width:100%; height:120px; object-fit:cover;"><div style="padding:6px; font-size:0.75rem; color:var(--text-muted);">Tag ${item.day}</div>`;
+                container.appendChild(box);
+            });
+        }
+
+        function initGrowthScreen() {
+            let select = document.getElementById('growthChildSelect');
+            select.innerHTML = kids.length === 0 ? '<option>Bitte zuerst ein Kind anlegen</option>' : '';
+            kids.forEach((k, idx) => select.appendChild(Object.assign(document.createElement('option'), { value: idx, innerText: k.name })));
+            if (document.getElementById('growthDateInput')) document.getElementById('growthDateInput').valueAsDate = new Date();
+            resetGrowthForm();
+            renderGrowthData();
+        }
+
+        function resetGrowthForm() {
+            document.getElementById('growthDateInput').valueAsDate = new Date();
+            document.getElementById('growthSizeInput').value = '';
+            document.getElementById('growthWeightInput').value = '';
+            document.getElementById('growthFormButtons').innerHTML = `<button onclick="saveGrowthEntry()" class="btn">Messung eintragen</button>`;
+            editingGrowthIndex = null;
+        }
+
+        function saveGrowthEntry() {
+            let childIndex = document.getElementById('growthChildSelect').value;
+            let entry = { date: document.getElementById('growthDateInput').value, size: document.getElementById('growthSizeInput').value, weight: document.getElementById('growthWeightInput').value };
+            if (!entry.date || (!entry.size && !entry.weight)) { alert("Bitte Datum und mindestens Größe oder Gewicht angeben."); return; }
+
+            if (!growthData[childIndex]) growthData[childIndex] = [];
+            if (editingGrowthIndex !== null) growthData[childIndex][editingGrowthIndex] = entry;
+            else growthData[childIndex].push(entry);
+
+            growthData[childIndex].sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('request_growth', JSON.stringify(growthData));
+            resetGrowthForm();
+            renderGrowthData();
+            renderDashboard();
+        }
+
+        function editGrowthEntry(index) {
+            let item = growthData[document.getElementById('growthChildSelect').value][index];
+            document.getElementById('growthDateInput').value = item.date;
+            document.getElementById('growthSizeInput').value = item.size || '';
+            document.getElementById('growthWeightInput').value = item.weight || '';
+            editingGrowthIndex = index;
+            document.getElementById('growthFormButtons').innerHTML = `<button onclick="saveGrowthEntry()" class="btn">Aktualisieren</button><button onclick="resetGrowthForm()" class="btn btn-secondary" style="margin-top:6px;">Abbrechen</button>`;
+        }
+
+        function deleteGrowthEntry(index) {
+            if (confirm("Messwert löschen?")) {
+                growthData[document.getElementById('growthChildSelect').value].splice(index, 1);
+                localStorage.setItem('request_growth', JSON.stringify(growthData));
+                resetGrowthForm();
+                renderGrowthData();
+                renderDashboard();
+            }
+        }
+
+        function renderGrowthData() {
+            let childIndex = document.getElementById('growthChildSelect').value;
+            let container = document.getElementById('growthHistoryList');
+            container.innerHTML = '';
+            let list = growthData[childIndex];
+
+            if (!list || list.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Noch keine Messwerte.</p>';
+                document.getElementById('chartContainer').innerHTML = '';
+                return;
+            }
+
+            list.forEach((item, index) => {
+                let div = document.createElement('div');
+                div.style.cssText = "background:#f1f5f9; padding:12px; border-radius:10px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;";
+                div.innerHTML = `
+                    <div>
+                        <span>📏 ${item.size ? item.size + ' ' + appUnits.size : '-'}</span> &nbsp;|&nbsp; 
+                        <span>⚖️ ${item.weight ? item.weight + ' ' + appUnits.weight : '-'}</span>
+                        <div style="margin-top:6px; font-size:0.75rem; color:var(--text-muted);">📅 ${item.date}</div>
+                    </div>
+                    <div><button onclick="editGrowthEntry(${index})">✏️</button><button onclick="deleteGrowthEntry(${index})">🗑️</button></div>
+                `;
+                container.appendChild(div);
+            });
+            renderGrowthChart(list, document.getElementById('chartContainer'), kids[childIndex]);
+        }
+
+        function renderGrowthChart(list, container, kid) {
+            container.innerHTML = '';
+            let width = 520, height = 360, pL = 55, pR = 25, pB = 65, pT = 40;
+            let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            svg.style.width = "100%";
+
+            let bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            bg.setAttribute("width", width); bg.setAttribute("height", height);
+            bg.setAttribute("fill", "#ffffff");
+            svg.appendChild(bg);
+
+            let legendGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            legendGroup.innerHTML = `
+                <circle cx="160" cy="18" r="5" fill="#ef4444"/>
+                <text x="172" y="21" font-size="12" font-weight="600" fill="#1e293b">Gewicht (Rot)</text>
+                <circle cx="310" cy="18" r="5" fill="#10b981"/>
+                <text x="322" y="21" font-size="12" font-weight="600" fill="#1e293b">Größe (Grün)</text>
+            `;
+            svg.appendChild(legendGroup);
+
+            let maxValSize = 80;
+            list.forEach(item => {
+                if(Number(item.size) > maxValSize) maxValSize = Math.ceil(Number(item.size) / 10) * 10;
+            });
+
+            let maxValWeight = 20;
+            list.forEach(item => {
+                if(Number(item.weight) > maxValWeight) maxValWeight = Math.ceil(Number(item.weight) / 5) * 5;
+            });
+
+            let minTime = new Date(list[0].date).getTime();
+            let maxTime = new Date(list[list.length - 1].date).getTime();
+            if (minTime === maxTime) maxTime += 86400000;
+
+            let getX = dateStr => {
+                let t = new Date(dateStr).getTime();
+                return pL + ((t - minTime) / (maxTime - minTime)) * (width - pL - pR);
+            };
+            
+            let getYSize = val => pT + (height - pB - pT) - (Number(val) / maxValSize) * (height - pB - pT);
+            let getYWeight = val => pT + (height - pB - pT) - (Number(val) / maxValWeight) * (height - pB - pT);
+
+            for (let v = 0; v <= maxValSize; v += 10) {
+                let y = getYSize(v);
+                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                line.setAttribute("x1", pL); line.setAttribute("y1", y);
+                line.setAttribute("x2", width - pR); line.setAttribute("y2", y);
+                line.setAttribute("stroke", "#e2e8f0"); line.setAttribute("stroke-dasharray", "3,3");
+                svg.appendChild(line);
+
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", pL - 8); text.setAttribute("y", y + 4);
+                text.setAttribute("font-size", "11"); text.setAttribute("fill", "#64748b"); text.setAttribute("text-anchor", "end");
+                text.textContent = v + "cm";
+                svg.appendChild(text);
+            }
+
+            let sizePoints = list.filter(i => i.size !== "" && !isNaN(Number(i.size)));
+            if (sizePoints.length > 1) {
+                let pathStr = sizePoints.map((item, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(item.date)} ${getYSize(item.size)}`).join(' ');
+                let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathStr);
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke", "#10b981");
+                path.setAttribute("stroke-width", "2.5");
+                svg.appendChild(path);
+            }
+
+            let weightPoints = list.filter(i => i.weight !== "" && !isNaN(Number(i.weight)));
+            if (weightPoints.length > 1) {
+                let pathStrW = weightPoints.map((item, idx) => `${idx === 0 ? 'M' : 'L'} ${getX(item.date)} ${getYWeight(item.weight)}`).join(' ');
+                let pathW = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                pathW.setAttribute("d", pathStrW);
+                pathW.setAttribute("fill", "none");
+                pathW.setAttribute("stroke", "#ef4444");
+                pathW.setAttribute("stroke-width", "2.5");
+                svg.appendChild(pathW);
+            }
+
+            for (let w = 0; w <= maxValWeight; w += 5) {
+                let x = pL + (w / maxValWeight) * (width - pL - pR);
+                let textW = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                textW.setAttribute("x", x); textW.setAttribute("y", height - pB + 20);
+                textW.setAttribute("font-size", "10"); textW.setAttribute("fill", "#ef4444"); textW.setAttribute("text-anchor", "middle");
+                textW.textContent = w + "kg";
+                svg.appendChild(textW);
+            }
+
+            list.forEach(item => {
+                let x = getX(item.date);
+                let dateParts = item.date.split('-');
+                let formattedDate = dateParts.length === 3 ? `${dateParts[2]}.${dateParts[1]}.${dateParts[0]}` : item.date;
+                
+                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.setAttribute("x", x); text.setAttribute("y", height - pB + 40);
+                text.setAttribute("font-size", "10"); text.setAttribute("fill", "#64748b"); text.setAttribute("text-anchor", "middle");
+                text.textContent = formattedDate;
+                svg.appendChild(text);
+
+                if (item.size !== "" && !isNaN(Number(item.size))) {
+                    let cyS = getYSize(item.size);
+                    let cS = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    cS.setAttribute("cx", x); cS.setAttribute("cy", cyS); cS.setAttribute("r", "5");
+                    cS.setAttribute("fill", "#10b981");
+                    cS.setAttribute("stroke", "#ffffff"); cS.setAttribute("stroke-width", "1.5");
+                    svg.appendChild(cS);
+                }
+
+                if (item.weight !== "" && !isNaN(Number(item.weight))) {
+                    let cyW = getYWeight(item.weight);
+                    let cW = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    cW.setAttribute("cx", x); cW.setAttribute("cy", cyW); cW.setAttribute("r", "5");
+                    cW.setAttribute("fill", "#ef4444");
+                    cW.setAttribute("stroke", "#ffffff"); cW.setAttribute("stroke-width", "1.5");
+                    svg.appendChild(cW);
+                }
+            });
+
+            container.appendChild(svg);
+        }
+
+        function initPregnancyScreen() {
+            let select = document.getElementById('pregChildSelect');
+            select.innerHTML = kids.length === 0 ? '<option>Bitte zuerst ein Kind anlegen</option>' : '';
+            kids.forEach((k, idx) => select.appendChild(Object.assign(document.createElement('option'), { value: idx, innerText: k.name })));
+            if (document.getElementById('pregDateInput')) document.getElementById('pregDateInput').valueAsDate = new Date();
+            resetPregnancyForm();
+            renderPregnancyData();
+        }
+
+        function resetPregnancyForm() {
+            document.getElementById('pregDateInput').valueAsDate = new Date();
+            document.getElementById('pregSizeInput').value = '';
+            document.getElementById('pregWeightInput').value = '';
+            document.getElementById('pregNoteInput').value = '';
+            document.getElementById('pregMediaInput').value = '';
+            document.getElementById('pregFormButtons').innerHTML = `<button onclick="savePregnancyEntry()" class="btn">Untersuchung eintragen</button>`;
+            editingPregIndex = null;
+        }
+
+        function savePregnancyEntry() {
+            let childIndex = document.getElementById('pregChildSelect').value;
+            let entry = {
+                date: document.getElementById('pregDateInput').value,
+                size: document.getElementById('pregSizeInput').value,
+                weight: document.getElementById('pregWeightInput').value,
+                note: document.getElementById('pregNoteInput').value,
+                media: document.getElementById('pregMediaInput').files.length > 0 ? Array.from(document.getElementById('pregMediaInput').files).map(f => URL.createObjectURL(f)) : (editingPregIndex !== null ? pregnancyData[childIndex][editingPregIndex].media : [])
+            };
+            if (!entry.date) { alert("Bitte Datum angeben."); return; }
+
+            if (!pregnancyData[childIndex]) pregnancyData[childIndex] = [];
+            if (editingPregIndex !== null) pregnancyData[childIndex][editingPregIndex] = entry;
+            else pregnancyData[childIndex].push(entry);
+
+            pregnancyData[childIndex].sort((a, b) => new Date(a.date) - new Date(b.date));
+            localStorage.setItem('request_pregnancy', JSON.stringify(pregnancyData));
+            resetPregnancyForm();
+            renderPregnancyData();
+        }
+
+        function editPregnancyEntry(index) {
+            let item = pregnancyData[document.getElementById('pregChildSelect').value][index];
+            document.getElementById('pregDateInput').value = item.date;
+            document.getElementById('pregSizeInput').value = item.size || '';
+            document.getElementById('pregWeightInput').value = item.weight || '';
+            document.getElementById('pregNoteInput').value = item.note || '';
+            editingPregIndex = index;
+            document.getElementById('pregFormButtons').innerHTML = `<button onclick="savePregnancyEntry()" class="btn">Aktualisieren</button><button onclick="resetPregnancyForm()" class="btn btn-secondary" style="margin-top:6px;">Abbrechen</button>`;
+        }
+
+        function deletePregnancyEntry(index) {
+            if (confirm("Eintrag löschen?")) {
+                pregnancyData[document.getElementById('pregChildSelect').value].splice(index, 1);
+                localStorage.setItem('request_pregnancy', JSON.stringify(pregnancyData));
+                resetPregnancyForm();
+                renderPregnancyData();
+            }
+        }
+
+        function getFruitComparison(ssw) {
+            const fruitMap = {
+                5: { fruit: "Mohnkorn (ca. 2 mm)", icon: "🌱" },
+                6: { fruit: "Sesamkorn (ca. 4 mm)", icon: "🌾" },
+                7: { fruit: "Linse (ca. 8 mm)", icon: "🫘" },
+                8: { fruit: "Blaubeere (ca. 1,6 cm)", icon: "🫐" },
+                9: { fruit: "Traube (ca. 2,3 cm)", icon: "🍇" },
+                10: { fruit: "Erdbeere (ca. 3 cm)", icon: "🍓" },
+                11: { fruit: "Feige (ca. 4 cm)", icon: "🫒" },
+                12: { fruit: "Limette (ca. 5 cm)", icon: "🍋" },
+                13: { fruit: "Erbsenschote (ca. 7 cm)", icon: "🟢" },
+                14: { fruit: "Zitrone (ca. 8,5 cm)", icon: "🍋" },
+                15: { fruit: "Apfel (ca. 10 cm)", icon: "🍏" },
+                16: { fruit: "Avocado (ca. 11,5 cm)", icon: "🥑" },
+                17: { fruit: "Rübe (ca. 13 cm)", icon: "🥔" },
+                18: { fruit: "Paprika (ca. 14 cm)", icon: "🫑" },
+                19: { fruit: "Tomate (ca. 15 cm)", icon: "🍅" },
+                20: { fruit: "Banane (ca. 16,5 cm)", icon: "🍌" },
+                21: { fruit: "Granatapfel (ca. 18 cm)", icon: "🍎" },
+                22: { fruit: "Papaya (ca. 19 cm)", icon: "🍈" },
+                23: { fruit: "Mango (ca. 20 cm)", icon: "🥭" },
+                24: { fruit: "Maiskolben (ca. 30 cm)", icon: "🌽" },
+                25: { fruit: "Blumenkohl (ca. 34 cm)", icon: "🥦" },
+                26: { fruit: "Salatkopf (ca. 35 cm)", icon: "🥬" },
+                27: { fruit: "Aubergine (ca. 36 cm)", icon: "🍆" },
+                28: { fruit: "Chinakohl (ca. 37 cm)", icon: "🥬" },
+                29: { fruit: "Butternut-Kürbis (ca. 38 cm)", icon: "🟡" },
+                30: { fruit: "Kohlrabi (ca. 39 cm)", icon: "🟢" },
+                31: { fruit: "Kokosnuss (ca. 41 cm)", icon: "🥥" },
+                32: { fruit: "Ananas (ca. 42 cm)", icon: "🍍" },
+                33: { fruit: "Sellerieknolle (ca. 43 cm)", icon: "🥔" },
+                34: { fruit: "Melone (ca. 45 cm)", icon: "🍈" },
+                35: { fruit: "Honigmelone (ca. 46 cm)", icon: "🍈" },
+                36: { fruit: "Römersalat (ca. 47 cm)", icon: "🥗" },
+                37: { fruit: "Mangold (ca. 48 cm)", icon: "🌿" },
+                38: { fruit: "Rhabarberstange (ca. 49 cm)", icon: "🎋" },
+                39: { fruit: "Kürbis (ca. 50 cm)", icon: "🎃" },
+                40: { fruit: "Wassermelone (ca. 51+ cm)", icon: "🍉" }
+            };
+            if (ssw < 5) return { fruit: "winziges Pünktchen", icon: "✨" };
+            if (ssw > 42) return { fruit: "kleines Wunder (vollendetes Baby)", icon: "👶" };
+            return fruitMap[ssw] || { fruit: "Wachsendes Baby", icon: "👶" };
+        }
+
+        function renderPregnancyData() {
+            let childIndex = document.getElementById('pregChildSelect').value;
+            let historyContainer = document.getElementById('pregHistoryList');
+            let galleryContainer = document.getElementById('pregGalleryGrid');
+            let widgetTitle = document.getElementById('pregWidgetTitle');
+            let widgetDetails = document.getElementById('pregWidgetDetails');
+            let fruitIconElem = document.getElementById('pregFruitIcon');
+
+            historyContainer.innerHTML = '';
+            galleryContainer.innerHTML = '';
+
+            let selectedKid = kids[childIndex];
+            let kidDateType = selectedKid && selectedKid.dateType ? selectedKid.dateType.toLowerCase() : '';
+
+            if (kids.length === 0 || childIndex === "" || !selectedKid || !selectedKid.birthDate) {
+                widgetTitle.innerText = "Status";
+                widgetDetails.innerHTML = "Bitte wähle ein Kind aus.";
+                fruitIconElem.innerText = "👶";
+                historyContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Noch keine Daten.</p>';
+                galleryContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; grid-column:span 2;">Keine Bilder.</p>';
+                return;
+            }
+
+            if (kidDateType === 'geburtstag') {
+                let ageStr = calculateAgeString(selectedKid.birthDate);
+                widgetTitle.innerText = `Aktuelles Alter von ${selectedKid.name}`;
+                widgetDetails.innerHTML = `Dein Kind ist bereits auf der Welt und <strong>${ageStr}</strong>! 🎉`;
+                fruitIconElem.innerText = "🎈";
+            } else {
+                let etDate = new Date(selectedKid.birthDate);
+                let today = new Date();
+                let diffTime = etDate - today;
+                let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                let daysPassed = 280 - diffDays;
+                let currentSswWeek = Math.floor(daysPassed / 7) + 1;
+                let currentSswDay = daysPassed % 7;
+
+                if (currentSswWeek < 1) currentSswWeek = 1;
+                if (currentSswWeek > 42) currentSswWeek = 42;
+
+                let comparison = getFruitComparison(currentSswWeek);
+
+                widgetTitle.innerText = `Aktuelle Woche: SSW ${currentSswWeek} (${currentSswWeek - 1}. + ${currentSswDay} TAGE)`;
+                widgetDetails.innerHTML = `Dein Baby ist diese Woche ungefähr so groß wie eine/ein <strong>${comparison.fruit}</strong>! 🍼`;
+                fruitIconElem.innerText = comparison.icon;
+            }
+
+            let list = pregnancyData[childIndex];
+            if (!list || list.length === 0) {
+                historyContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Noch keine Untersuchungen / Notizen eingetragen.</p>';
+                galleryContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; grid-column:span 2;">Keine Bilder.</p>';
+                return;
+            }
+
+            list.forEach((item, index) => {
+                let div = document.createElement('div');
+                div.style.cssText = "background:#f1f5f9; padding:12px; border-radius:12px; font-size:0.85rem;";
+                div.innerHTML = `<div>📏 ${item.size ? item.size + ' ' + appUnits.size : '-'} | ⚖️ ${item.weight ? item.weight + ' ' + appUnits.weight : '-'}</div>${item.note ? '<div style="margin-top:4px;">💬 ' + item.note + '</div>' : ''}<div style="margin-top:6px; font-size:0.75rem; color:var(--text-muted);">📅 ${item.date}</div><div style="margin-top:6px;"><button onclick="editPregnancyEntry(${index})">✏️</button><button onclick="deletePregnancyEntry(${index})">🗑️</button></div>`;
+                historyContainer.appendChild(div);
+
+                if (item.media) {
+                    item.media.forEach(img => {
+                        let box = document.createElement('div');
+                        box.style.cssText = "background:#f1f5f9; border-radius:12px; overflow:hidden;";
+                        box.innerHTML = `<img src="${img}" style="width:100%; height:120px; object-fit:cover;">`;
+                        galleryContainer.appendChild(box);
+                    });
+                }
+            });
+        }
+
+        function initWishlistScreen() {
+            let select = document.getElementById('wishChildSelect');
+            select.innerHTML = kids.length === 0 ? '<option>Bitte zuerst ein Kind anlegen</option>' : '';
+            kids.forEach((k, idx) => select.appendChild(Object.assign(document.createElement('option'), { value: idx, innerText: k.name })));
+            renderWishlist();
+        }
+
+        function saveWishItem() {
+            let childIndex = document.getElementById('wishChildSelect').value;
+            let title = document.getElementById('wishTitleInput').value.trim();
+            if (!title) { alert("Bitte Wunsch eingeben."); return; }
+
+            if (!wishlistData[childIndex]) wishlistData[childIndex] = [];
+            wishlistData[childIndex].push({ title: title, occasion: document.getElementById('wishOccasionInput').value.trim(), link: document.getElementById('wishLinkInput').value.trim(), done: false });
+            localStorage.setItem('request_wishlist', JSON.stringify(wishlistData));
+
+            document.getElementById('wishTitleInput').value = '';
+            document.getElementById('wishOccasionInput').value = '';
+            document.getElementById('wishLinkInput').value = '';
+            renderWishlist();
+        }
+
+        function toggleWishDone(index) {
+            let childIndex = document.getElementById('wishChildSelect').value;
+            wishlistData[childIndex][index].done = !wishlistData[childIndex][index].done;
+            localStorage.setItem('request_wishlist', JSON.stringify(wishlistData));
+            renderWishlist();
+        }
+
+        function deleteWishItem(index) {
+            if (confirm("Wunsch löschen?")) {
+                wishlistData[document.getElementById('wishChildSelect').value].splice(index, 1);
+                localStorage.setItem('request_wishlist', JSON.stringify(wishlistData));
+                renderWishlist();
+            }
+        }
+
+        function renderWishlist() {
+            let container = document.getElementById('wishlistContainer');
+            container.innerHTML = '';
+            let list = wishlistData[document.getElementById('wishChildSelect').value];
+
+            if (!list || list.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Noch keine Wünsche.</p>';
+                return;
+            }
+
+            list.forEach((item, index) => {
+                let div = document.createElement('div');
+                div.style.cssText = `background:#f1f5f9; padding:12px; border-radius:12px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center; ${item.done ? 'opacity: 0.6;' : ''}`;
+                div.innerHTML = `<div><span style="${item.done ? 'text-decoration: line-through;' : ''}">${item.title}</span></div><div><button onclick="toggleWishDone(${index})">${item.done ? 'Erledigt ✓' : 'Offen'}</button><button onclick="deleteWishItem(${index})">🗑️</button></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function sendWhatsAppInvite() {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent("Schau dir unsere BabySteps-App an! 10% Rabatt & Cashback gesichert: [Link]")}`, '_blank');
+        }
+
+        function renderStats() {
+            let container = document.getElementById('statsContent');
+            container.innerHTML = `<div style="background:#f1f5f9; padding:14px; border-radius:12px; display:flex; justify-content:space-between;"><span>📝 Gesamtanzahl Posts</span><b>0</b></div>`;
+        }
+    </script>
+</body>
+</html>
