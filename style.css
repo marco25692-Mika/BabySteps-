@@ -1,0 +1,89 @@
+/* ==========================================
+   VOLLSTÄNDIGES WARM-BEIGE DESIGN (style.css)
+   ========================================== */
+
+/* 1. Zentrale Farbvariablen */
+:root {
+  --bg-main: #F4EFEA !important;        /* Warmes Beige für den Haupt-Hintergrund */
+  --bg-card: #FFFFFF !important;        /* Cremeweiß für Karten */
+  --border-color: #E2D7CB !important;   /* Weiche beigebraune Ränder */
+  
+  --text-dark: #3D352E !important;      /* Weiches Dunkelbraun statt Schwarz */
+  --text-muted: #8A7E72 !important;     /* Abgedunkeltes Mittelbraun */
+  
+  --accent-primary: #C86D51 !important; /* Warmes Terracotta (ersetzt Türkis komplett) */
+  --accent-hover: #A8553C !important;
+}
+
+/* 2. Globaler Hintergrund & Schrift */
+html, body, main, #app, .app, .container, section, header {
+  background-color: var(--bg-main) !important;
+  color: var(--text-dark) !important;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  padding-bottom: 90px !important;
+}
+
+/* 3. Alle Karten & Weiße Boxen */
+div, article, section, .card, .child-card {
+  border-color: var(--border-color);
+}
+
+.card, .child-card, div[class*="card"], div[class*="box"] {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 15px rgba(61, 53, 46, 0.05) !important;
+}
+
+/* 4. Haupt-Buttons & Türkise Element-Überschreibung */
+button, .btn, input[type="submit"], [class*="btn-primary"], [class*="add"] {
+  background-color: var(--accent-primary) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  padding: 10px 16px !important;
+}
+
+button:hover, .btn:hover {
+  background-color: var(--accent-hover) !important;
+}
+
+/* 5. Bearbeiten- & Löschen-Buttons */
+button[class*="edit"], .btn-edit, [onclick*="edit"] {
+  background-color: #EAE0D5 !important;
+  color: var(--text-dark) !important;
+}
+
+button[class*="delete"], .btn-delete, [onclick*="delete"] {
+  background-color: #F7DCD9 !important;
+  color: #A83A3A !important;
+}
+
+/* 6. Schriftfarben & Highlight-Texte */
+h1, h2, h3, h4, h5, h6, p, span, label, strong, div {
+  color: var(--text-dark);
+}
+
+small, .muted, [style*="color: green"], [style*="color: teal"], [style*="color: #00"] {
+  color: var(--accent-primary) !important;
+}
+
+/* 7. Bottom Navigation Bar */
+nav, footer, .nav-bar, .bottom-nav, [class*="nav"] {
+  background-color: #FFFFFF !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+.nav-item, nav a, .nav-bar a {
+  color: var(--text-muted) !important;
+}
+
+.nav-item.active, nav a.active, .nav-bar a.active, [class*="active"] {
+  color: var(--accent-primary) !important;
+}
