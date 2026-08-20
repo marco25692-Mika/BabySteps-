@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BabySteps</title>
+    <style>
+        :root {
+            --primary: #C86D51;
+            --primary-light: #F4E8E1;
+            --text-main: #3A322C;
+            --text-muted: #82756A;
+            --bg-body: #F4EFEA;
+            --card-bg: #FFFFFF;
+            --border-color: #E2D7CB;
+            --accent-gold: #D4A373;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            padding-bottom: 80px;
+        }
+
+        .screen { display: none; padding: 16px; max-width: 600px; margin: 0 auto; }
+        .screen.active { display: block; }
+        h2 { font-size: 1.4rem; margin-bottom: 16px; }
+
+        .card {
+            background: var(--card-bg); border-radius: 20px; padding: 16px; margin-bottom: 16px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04); border: 1px solid var(--border-color);
+        }
+
+        .btn {
+            background-color: var(--primary); color: white; border: none; padding: 12px 20px;
+            border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; text-align: center; font-size: 1rem;
+        }
+        .btn-secondary { background-color: #f1f5f9; color: var(--text-main); }
+
+        .input-field {
+            width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 12px;
+            box-sizing: border-box; margin-bottom: 12px; font-size: 1rem; background: #fff;
+        }
+        input[type="date"].input-field, input[type="datetime-local"].input-field { max-width: 100%; display: block; }
+
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px); border-top: 1px solid var(--border-color); display: flex;
+            justify-content: flex-start; padding: 8px 0 20px 0; z-index: 1000; overflow-x: auto; white-space: nowrap;
+        }
+        .bottom-nav::-webkit-scrollbar { display: none; }
+        .bottom-nav.hidden { display: none !important; }
+
+        .nav-item {
+            background: none; border: none; color: var(--text-muted); font-size: 0.55rem;
+            display: flex; flex-direction: column; align-items: center; cursor: pointer; flex: 0 0 auto; min-width: 60px;
+        }
+        .nav-item span { font-size: 1.1rem; margin-bottom: 4px; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+
+        .calendar-header-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; font-weight: bold; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+        .calendar-day { aspect-ratio: 1; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; cursor: pointer; position: relative; }
+        .calendar-day.has-post { background: var(--primary-light); color: var(--primary); border: 1px solid var(--primary); }
+        .calendar-day.today { border: 2px solid var(--primary); font-weight: 800; background-color: #f0fdf4; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center; padding: 16px; }
+        .modal-content { background: #fff; border-radius: 20px; padding: 24px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-sizing: border-box; }
+
+        .subpage { display: none; } .subpage.active { display: block; }
+        .back-btn { background: none; border: none; color: var(--primary); font-size: 1rem; cursor: pointer; margin-bottom: 16px; font-weight: 600; padding: 0; display: inline-flex; align-items: center; gap: 4px; }
+        .menu-list { list-style: none; padding: 0; margin: 0; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border-color); cursor: pointer; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item-left { display: flex; align-items: center; gap: 12px; }
+        .menu-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+        .menu-text { font-size: 1rem; font-weight: 500; color: var(--text-main); }
+        .arrow { color: #C7C7CC; font-size: 1.2rem; }
+        .highlight-box { background-color: var(--primary-light); border-left: 4px solid var(--primary); padding: 14px; border-radius: 12px; margin-bottom: 16px; color: var(--text-main); font-size: 0.9rem; line-height: 1.4; }
+
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; opacity: 0; }
+        .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        .welcome-header { font-size: 1.6rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; line-height: 1.2; letter-spacing: -0.5px; }
+        .welcome-sub { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 24px; }
+        .kids-showcase { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; margin-bottom: 8px; }
+        .kids-showcase::-webkit-scrollbar { display: none; }
+        .kid-card { background: var(--card-bg); border-radius: 24px; padding: 16px; min-width: 140px; flex: 0 0 auto; text-align: center; box-shadow: 0 8px 16px rgba(0,0,0,0.03); border: 1px solid var(--border-color); position: relative; }
+        .kid-avatar-wrap { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; padding: 3px; background: linear-gradient(135deg, var(--primary), var(--accent-gold)); position: relative; }
+        .kid-avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid white; box-sizing: border-box; }
+        .sleep-badge { position: absolute; bottom: -2px; right: -5px; background: #fff; border-radius: 50%; font-size: 1.2rem; box-shadow: 0 2px 6px rgba(0,0,0,0.15); width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+
+        .quick-actions { display: flex; gap: 12px; margin-bottom: 20px; }
+        .quick-btn { flex: 1; background: #fff; border: 1px solid var(--border-color); border-radius: 20px; padding: 16px 8px; text-align: center; font-size: 0.8rem; font-weight: 600; color: var(--text-main); box-shadow: 0 4px 10px rgba(0,0,0,0.02); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: transform 0.1s; }
+        .quick-btn:active { transform: scale(0.95); }
+        .quick-btn span { font-size: 1.6rem; }
+
+        @keyframes pulseSleep { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
+        .sleep-active { animation: pulseSleep 2s infinite ease-in-out; }
+
+        .memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+        .memory-card { aspect-ratio: 1; perspective: 1000px; cursor: pointer; }
+        .memory-card-inner { width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; position: relative; }
+        .memory-card.flipped .memory-card-inner { transform: rotateY(180deg); }
+        .memory-card-front, .memory-card-back { width: 100%; height: 100%; position: absolute; backface-visibility: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .memory-card-back { background: linear-gradient(135deg, var(--primary), var(--accent-gold)); color: white; font-size: 2rem; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); }
+        .memory-card-front { background: #fff; transform: rotateY(180deg); border: 2px solid var(--primary-light); }
+        .memory-card-front img { width: 100%; height: 100%; object-fit: cover; }
+
+        .sound-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .sound-btn { flex: 1 1 calc(33% - 8px); background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 4px; text-align: center; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: all 0.2s; }
+        .sound-btn span { font-size: 1.5rem; }
+        .sound-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: scale(0.95); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+
+    <!-- 0. LOGIN / STARTBILDSCHIRM -->
+    <div id="loginScreen" class="screen fade-in">
+        <div style="text-align:center; padding-top:40px; padding-bottom: 20px;">
+            <div style="font-size:4.5rem; margin-bottom:10px;">👶</div>
+            <h1 style="color:var(--primary); margin-top:0; font-size: 2.2rem; letter-spacing: -0.5px;">BabySteps</h1>
+            <p style="color:var(--text-muted); font-size: 1rem;">Dein digitales Familientagebuch</p>
+        </div>
+        <div class="card" style="padding: 24px;">
+            <p style="font-size:0.9rem; color:var(--text-main); font-weight: 600; margin-top:0; margin-bottom:16px;">Willkommen! Bitte stelle dich kurz vor:</p>
+            
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Dein Vorname</label>
+            <input type="text" id="loginName" class="input-field" placeholder="z.B. Sarah" style="background:#f8fafc;">
+            
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Deine Beziehung zum Kind</label>
+            <select id="loginRole" class="input-field" style="background:#f8fafc;">
+                <option value="Mama 👩">Mama 👩</option>
+                <option value="Papa 👨">Papa 👨</option>
+                <option value="Oma 👵">Oma 👵</option>
+                <option value="Opa 👴">Opa 👴</option>
+                <option value="Tante 👱‍♀️">Tante 👱‍♀️</option>
+                <option value="Onkel 👨‍🦰">Onkel 👨‍🦰</option>
+                <option value="Schwester 👧">Schwester 👧</option>
+                <option value="Bruder 👦">Bruder 👦</option>
+                <option value="Cousine / Cousin 🧒">Cousine / Cousin 🧒</option>
+                <option value="Pate / Patin 🌟">Pate / Patin 🌟</option>
+                <option value="Freunde 🤝">Freunde 🤝</option>
+            </select>
+            
+            <button class="btn" onclick="handleLoginSubmit()" style="margin-top: 8px;">Tagebuch beitreten</button>
+        </div>
+    </div>
+
+    <!-- 1. MAIN APP SCREEN -->
+    <div id="mainAppScreen" class="screen">
+        <div class="fade-in">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div id="dynamicWelcomeHeader"></div>
+                <button id="addKidBtn" onclick="showAddChildScreen()" class="btn" style="width: auto; padding: 8px 12px; font-size: 0.8rem; background: var(--primary-light); color: var(--primary);">+ Kind</button>
+            </div>
+            <div id="kidsDashboard"></div>
+        </div>
+        <div class="card fade-in delay-2" style="border-radius: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 id="currentMonthTitle" style="margin: 0; font-size: 1.1rem;">Kalender</h3>
+                <button id="calendarToggleBtn" onclick="toggleCalendar()" style="background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 600;">📅 Einklappen</button>
+            </div>
+            <div id="calendarContainer">
+                <div class="calendar-header-days"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. ADD / EDIT CHILD SCREEN -->
+    <div id="addChildScreen" class="screen">
+        <h2 id="formTitle">Kind anlegen</h2>
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Name</label><input type="text" id="newName" class="input-field" placeholder="Name des Kindes">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Geschlecht</label><select id="newGender" class="input-field"><option value="male">Junge (Babyblau)</option><option value="female">Mädchen (Hellrosa)</option></select>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Art des Datums</label><select id="newDateType" class="input-field" onchange="updateDateLabel()"><option value="et">Entbindungstermin (ET)</option><option value="geburtstag">Tatsächlicher Geburtstag</option></select>
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelDateInput">Errechneter Geburtstermin (ET)</label><input type="date" id="newBirthDate" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelSizeBirth">Größe bei Geburt (optional in cm)</label><input type="number" step="0.1" id="newSize" class="input-field" placeholder="z.B. 50">
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelWeightBirth">Gewicht bei Geburt (optional in kg)</label><input type="number" step="0.01" id="newWeight" class="input-field" placeholder="z.B. 3.45">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Profilbild / Avatar</label><input type="file" id="newImageFile" class="input-field" accept="image/*">
+            <button onclick="saveNewChildData()" class="btn" style="margin-top: 10px;">Speichern</button>
+            <button id="deleteChildBtn" onclick="deleteChildFromEdit()" class="btn" style="background:#fee2e2; color:#dc2626; margin-top:8px; display:none;">🗑️ Profil löschen</button>
+            <button onclick="switchNav('mainAppScreen', document.querySelector('.nav-item.active'))" class="btn btn-secondary" style="margin-top: 8px;">Abbrechen</button>
+        </div>
+    </div>
+
+    <!-- 3. GALLERY SCREEN -->
+    <div id="galleryScreen" class="screen fade-in"><h2>Galerie</h2><div class="card"><div id="fullGalleryGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;"></div></div></div>
+
+    <!-- 4. GROWTH SCREEN -->
+    <div id="growthScreen" class="screen fade-in">
+        <h2>Entwicklung</h2>
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Kind auswählen</label><select id="growthChildSelect" class="input-field" onchange="renderGrowthData()"></select>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Datum der Messung</label><input type="date" id="growthDateInput" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelGrowthSize">Größe (cm)</label><input type="number" step="0.1" id="growthSizeInput" class="input-field" placeholder="z.B. 55">
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelGrowthWeight">Gewicht (kg)</label><input type="number" step="0.01" id="growthWeightInput" class="input-field" placeholder="z.B. 4.2">
+            <div id="growthFormButtons"><button onclick="saveGrowthEntry()" class="btn" id="saveGrowthBtn">Messung eintragen</button></div>
+        </div>
+        <div class="card"><div id="chartContainer" style="width: 100%; overflow-x: auto;"></div></div>
+        <div class="card"><h3 style="margin-top: 0; font-size: 1.1rem;">Messwerte-Tabelle</h3><div id="growthHistoryList" style="display: flex; flex-direction: column; gap: 8px;"></div></div>
+    </div>
+
+    <!-- 4.1 SLEEP TRACKER SCREEN -->
+    <div id="sleepScreen" class="screen fade-in">
+        <h2>Schlaftracker 😴</h2>
+        <div class="card">
+            <h3 style="margin-top: 0; font-size: 1.1rem;">Einschlaf-Sounds</h3>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 12px;">Hilft Babys beim Beruhigen (Offline verfügbar).</p>
+            <div class="sound-grid">
+                <div class="sound-btn" id="btn-sound-noise" onclick="toggleSound('noise')"><span>📺</span>Rauschen</div>
+                <div class="sound-btn" id="btn-sound-hairdryer" onclick="toggleSound('hairdryer')"><span>💨</span>Föhn</div>
+                <div class="sound-btn" id="btn-sound-heartbeat" onclick="toggleSound('heartbeat')"><span>❤️</span>Herzschlag</div>
+                <div class="sound-btn" id="btn-sound-rain" onclick="toggleSound('rain')"><span>🌧️</span>Regen</div>
+                <div class="sound-btn" id="btn-sound-waves" onclick="toggleSound('waves')"><span>🌊</span>Meer</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Kind auswählen</label><select id="sleepChildSelect" class="input-field" onchange="renderSleepData()"></select>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Eingeschlafen (Datum & Uhrzeit)</label><input type="datetime-local" id="sleepStartInput" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Aufgewacht (Optional für Live-Tracker)</label><input type="datetime-local" id="sleepEndInput" class="input-field">
+            <div id="sleepFormButtons"><button onclick="saveSleepEntry()" class="btn">Schlaf eintragen</button></div>
+        </div>
+        <div class="card"><h3 style="margin-top: 0; font-size: 1.1rem;">Tägliche Schlaf-Übersicht</h3><div id="sleepChartContainer" style="width: 100%; overflow-x: auto;"></div></div>
+        <div class="card"><h3 style="margin-top: 0; font-size: 1.1rem;">Schlaf-Historie</h3><div id="sleepHistoryList" style="display: flex; flex-direction: column; gap: 8px;"></div></div>
+    </div>
+
+    <!-- 5. PREGNANCY SCREEN -->
+    <div id="pregnancyScreen" class="screen fade-in">
+        <h2>Schwangerschaft & Baby 🤰</h2>
+        <div class="card" style="background: linear-gradient(135deg, var(--primary-light), #f0fdf4); border: 1px solid var(--primary);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;"><h3 style="margin: 0; font-size: 1.1rem; color: var(--primary);" id="pregWidgetTitle">Status</h3><span id="pregFruitIcon" style="font-size: 2rem;">👶</span></div>
+            <div id="pregWidgetDetails" style="font-size: 0.95rem; color: var(--text-main); line-height: 1.5;"></div>
+        </div>
+        <div class="card" id="ssw-size-card" style="text-align: center;">
+            <div style="margin-bottom: 12px;"><select id="comparisonTypeSelect" class="input-field" style="margin-bottom: 0; display: inline-block; width: auto;" onchange="renderPregnancyData()"><option value="fruit">Obst & Gemüse</option><option value="animal">Tiere</option></select></div>
+            <div style="font-size: 2.5rem; margin-bottom: 8px;" id="ssw-fruit-emoji">❓</div>
+            <h3 style="margin-bottom: 4px; margin-top: 0;" id="ssw-fruit-title">Größenvergleich</h3>
+            <p id="ssw-fruit-desc" style="color: var(--text-muted); font-size: 0.95rem; margin: 0;">Bitte wähle unten ein Kind aus.</p>
+        </div>
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Kind auswählen</label><select id="pregChildSelect" class="input-field" onchange="renderPregnancyData()"></select>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Datum der Untersuchung</label><input type="date" id="pregDateInput" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelPregSize">Größe des Babys im Bauch (cm, opt.)</label><input type="number" step="0.1" id="pregSizeInput" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);" id="labelPregWeight">Gewicht des Babys im Bauch (opt.)</label><input type="number" step="0.01" id="pregWeightInput" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Notizen vom Frauenarzt</label><textarea id="pregNoteInput" class="input-field" rows="2"></textarea>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Ultraschallbild(er) hinzufügen</label><input type="file" id="pregMediaInput" class="input-field" accept="image/*" multiple>
+            <div id="pregFormButtons"><button onclick="savePregnancyEntry()" class="btn" id="savePregBtn">Untersuchung eintragen</button></div>
+        </div>
+        <div class="card"><h3 style="margin-top: 0; font-size: 1.1rem;">Ultraschall-Galerie</h3><div id="pregGalleryGrid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;"></div></div>
+        <div class="card"><h3 style="margin-top: 0; font-size: 1.1rem;">Verlaufskurve</h3><div id="pregChartContainer" style="width: 100%; overflow-x: auto;"></div></div>
+        <div class="card"><h3 style="margin-top: 0; font-size: 1.1rem;">Historie</h3><div id="pregHistoryList" style="display: flex; flex-direction: column; gap: 8px;"></div></div>
+    </div>
+
+    <!-- 6. WISHLIST SCREEN -->
+    <div id="wishlistScreen" class="screen fade-in">
+        <h2>Wunschliste 🎁</h2>
+        <div class="card">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Kind auswählen</label><select id="wishChildSelect" class="input-field" onchange="renderWishlist()"></select>
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Wunsch / Geschenk</label><input type="text" id="wishTitleInput" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Anlass (optional)</label><input type="text" id="wishOccasionInput" class="input-field">
+            <label style="font-size: 0.85rem; color: var(--text-muted);">Link zum Produkt (optional)</label><input type="url" id="wishLinkInput" class="input-field">
+            <div id="wishFormButtons"><button onclick="saveWishItem()" class="btn">Wunsch hinzufügen</button></div>
+        </div>
+        <div class="card"><h3 style="margin-top: 0; font-size: 1.1rem;">Gesammelte Wünsche</h3><div id="wishlistContainer" style="display: flex; flex-direction: column; gap: 8px;"></div></div>
+    </div>
+
+    <!-- 7. PROFIL SCREEN & UNTERSEITEN -->
+    <div id="profileScreen" class="screen fade-in">
+        <div id="profileMainView">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><h2 style="margin: 0;" id="profileHeaderName">Profil</h2><button onclick="switchNav('mainAppScreen', document.querySelector('.bottom-nav .nav-item:first-child'))" class="btn btn-secondary" style="width: auto; padding: 6px 12px; font-size: 0.85rem;">Schließen</button></div>
+            
+            <div class="card">
+                <h3 style="margin-top:0; font-size:1.1rem;">Deine Daten</h3>
+                <label style="font-size: 0.85rem; color: var(--text-muted);">Dein Vorname</label>
+                <input type="text" id="profileNameInput" class="input-field" onchange="saveUserName()" placeholder="Z.B. Sarah">
+                <label style="font-size: 0.85rem; color: var(--text-muted);">Deine Rolle in der Familie</label>
+                <select id="userRoleSelect" class="input-field" onchange="saveUserRole()">
+                    <option value="Mama 👩" id="roleOptionMama">Mama 👩</option>
+                    <option value="Papa 👨" id="roleOptionPapa">Papa 👨</option>
+                    <option value="Oma 👵">Oma 👵</option>
+                    <option value="Opa 👴">Opa 👴</option>
+                    <option value="Tante 👱‍♀️">Tante 👱‍♀️</option>
+                    <option value="Onkel 👨‍🦰">Onkel 👨‍🦰</option>
+                    <option value="Schwester 👧">Schwester 👧</option>
+                    <option value="Bruder 👦">Bruder 👦</option>
+                    <option value="Cousine / Cousin 🧒">Cousine / Cousin 🧒</option>
+                    <option value="Pate / Patin 🌟">Pate / Patin 🌟</option>
+                    <option value="Freunde 🤝">Freunde 🤝</option>
+                </select>
+            </div>
+            
+            <div class="card" id="familyPregnancyShareCard" style="display: none;"><h3 style="margin-top:0; font-size:1.1rem;">Schwangerschafts-Ansicht</h3><label style="display:flex; align-items:center; gap:10px; font-size:0.85rem; cursor:pointer;"><input type="checkbox" id="settingPregShare" onchange="saveSettings()"> Für Familie & Freunde freigeben</label></div>
+            
+            <div class="card">
+                <h3 style="margin-top:0; color:var(--text-muted); text-transform:uppercase; font-size:0.8rem; margin-bottom:10px;">Übersicht</h3>
+                <ul class="menu-list">
+                    <li class="menu-item" id="menuItemFamily" onclick="openProfileSubpage('familySubpage')" style="display:none;">
+                        <div class="menu-item-left"><span class="menu-icon">👨‍👩‍👧‍👦</span><span class="menu-text">Familie & Zugriff verwalten</span></div><span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('authSubpage')">
+                        <div class="menu-item-left"><span class="menu-icon">🔑</span><span class="menu-text">Abmelden</span></div><span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('settingsSubpage')">
+                        <div class="menu-item-left"><span class="menu-icon">⚙️</span><span class="menu-text">Einstellungen & Speicher</span></div><span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('contactSubpage')">
+                        <div class="menu-item-left"><span class="menu-icon">✉️</span><span class="menu-text">Kontakt & Support</span></div><span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" id="menuItemReferral" onclick="openProfileSubpage('referralSubpage')" style="display:none;">
+                        <div class="menu-item-left"><span class="menu-icon">📢</span><span class="menu-text">Weitersagen / Einladen</span></div><span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('termsSubpage')">
+                        <div class="menu-item-left"><span class="menu-icon">📄</span><span class="menu-text">Nutzungsbedingungen</span></div><span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" onclick="openProfileSubpage('privacySubpage')">
+                        <div class="menu-item-left"><span class="menu-icon">🔒</span><span class="menu-text">Datenschutzrichtlinie</span></div><span class="arrow">›</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div id="authSubpage" class="subpage fade-in"><button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button><h2>Abmelden</h2><div class="card"><div id="authStatusContainer"></div></div></div>
+        
+        <div id="familySubpage" class="subpage fade-in">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Familie verwalten</h2>
+            
+            <div class="card" style="border-color: var(--primary);">
+                <h3 style="margin-top:0; font-size:1.1rem; color:var(--primary);">Ausstehende Anfragen</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Hier siehst du Personen, die über euren Link beitreten möchten. Gewähre oder verweigere den Zugriff.</p>
+                <div id="pendingGuestsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0; font-size:1.1rem;">Aktive Mitglieder</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Diese Personen haben aktuell Zugriff auf euer Familientagebuch.</p>
+                <div id="familyGuestList" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+        </div>
+
+        <div id="contactSubpage" class="subpage fade-in"><button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button><h2>Kontakt & Support</h2><div class="card"><p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">Schreibe uns direkt eine E-Mail aus deinem E-Mail-Programm an <strong>babystep@gmx.net</strong>.</p><input type="email" id="contactUserEmail" class="input-field" placeholder="Deine E-Mail Adresse (optional)"><textarea id="contactUserMsg" class="input-field" rows="5" placeholder="Schreibe hier dein Anliegen..."></textarea><button onclick="submitContactForm()" class="btn">Via E-Mail Programm senden</button></div></div>
+        
+        <div id="settingsSubpage" class="subpage fade-in">
+            <button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button>
+            <h2>Einstellungen</h2>
+            <div class="card">
+                <label style="display:flex; align-items:center; gap:10px; font-size:0.85rem; cursor:pointer; margin-bottom: 12px;"><input type="checkbox" id="settingNotif" checked onchange="saveSettings()"> Push-Benachrichtigungen</label>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;"><span style="font-size:0.85rem;">Größe</span><select id="unitSize" class="input-field" style="width: 100px; margin-bottom:0;" onchange="saveSettings()"><option value="cm">cm</option><option value="inch">inch</option></select></div>
+                <div style="display:flex; justify-content:space-between; align-items:center;"><span style="font-size:0.85rem;">Gewicht</span><select id="unitWeight" class="input-field" style="width: 100px; margin-bottom:0;" onchange="saveSettings()"><option value="kg">kg</option><option value="lb">lb</option></select></div>
+            </div>
+            
+            <div class="card" id="dangerZoneCard" style="margin-top: 24px; border-color: #fee2e2;">
+                <h3 style="margin-top:0; font-size:1.1rem; color: #dc2626;">Speicher & Datenverwaltung</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">Verwalte den Speicherplatz oder setze die App zurück.</p>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button id="resetImagesBtn" onclick="executeDataReset('images', 'resetImagesBtn', 'Nur Bilder löschen')" class="btn" style="background: #fee2e2; color: #dc2626; font-size: 0.9rem;">Nur Bilder löschen</button>
+                    <button id="resetSleepBtn" onclick="executeDataReset('sleep', 'resetSleepBtn', 'Schlaf-Historie leeren')" class="btn" style="background: #fee2e2; color: #dc2626; font-size: 0.9rem;">Schlaf-Historie leeren</button>
+                    <button id="resetAppBtn" onclick="executeDataReset('all', 'resetAppBtn', 'App komplett zurücksetzen')" class="btn" style="background: #dc2626; color: white; font-size: 0.9rem;">App komplett zurücksetzen</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="referralSubpage" class="subpage fade-in"><button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button><h2>Weitersagen & Einladen</h2><div class="card"><div class="highlight-box">Sende einen Link an Freunde und Familie, damit sie die Entwicklung des Babys in ihrer eigenen App mitverfolgen können.</div><button onclick="openShareModal()" class="btn" style="background: #25D366;">📢 Personen jetzt einladen</button></div></div>
+        <div id="termsSubpage" class="subpage fade-in"><button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button><h2>Nutzungsbedingungen</h2><div class="card" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); max-height: 60vh; overflow-y: auto;">... (Siehe Original) ...</div></div>
+        <div id="privacySubpage" class="subpage fade-in"><button class="back-btn" onclick="closeProfileSubpage()">‹ Zurück</button><h2>Datenschutzrichtlinie</h2><div class="card" style="font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); max-height: 60vh; overflow-y: auto;">... (Siehe Original) ...</div></div>
+    </div>
+
+    <!-- 8. STATS SCREEN -->
+    <div id="statsScreen" class="screen fade-in"><h2>Statistik</h2><div class="card"><div id="statsContent" style="display: flex; flex-direction: column; gap: 10px;"></div></div></div>
+
+    <!-- 9. GAMES SCREEN (MEMORY) -->
+    <div id="gamesScreen" class="screen fade-in">
+        <h2>Spielecke 🎲</h2>
+        <div class="card">
+            <h3 style="margin-top:0; font-size:1.1rem;">Foto-Memory</h3>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 16px;">Spiele den Klassiker mit den echten Fotos aus deinem Tagebuch!</p>
+            <div id="memoryPreGame"></div>
+            <div id="memoryGameArea" style="display:none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                    <span id="memoryScore" style="font-size:0.9rem; font-weight:bold; color:var(--text-main);">Versuche: 0</span>
+                    <button onclick="initMemoryScreen()" style="background:#f1f5f9; border:none; padding:6px 12px; border-radius:8px; font-size:0.8rem; cursor:pointer;">Neues Spiel</button>
+                </div>
+                <div class="memory-grid" id="memoryGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Beitrag erstellen / bearbeiten -->
+    <div id="dayModal" class="modal"><div class="modal-content"><h3 id="modalDayTitle" style="margin-top: 0; margin-bottom: 4px; color:var(--primary);">Beitrag bearbeiten</h3><div style="margin-bottom: 16px;"><label style="font-size: 0.85rem; color: var(--text-muted);">Datum des Beitrags</label><input type="date" id="postDateInput" class="input-field" style="font-weight: bold; margin-bottom: 0;"></div><label style="font-size: 0.85rem; color: var(--text-muted);">Für welches Kind?</label><select id="postChildSelect" class="input-field"></select><label style="font-size: 0.85rem; color: var(--text-muted);">Autor</label><input type="text" id="postAuthorInput" class="input-field" readonly style="background:#f1f5f9; color:var(--text-muted);"><label style="font-size: 0.85rem; color: var(--text-muted);">Notiz / Text</label><textarea id="dayNoteInput" class="input-field" rows="3" placeholder="Was ist heute passiert?"></textarea><label style="font-size: 0.85rem; color: var(--text-muted);">Bilder oder Videos hinzufügen</label><input type="file" id="dayMediaInput" class="input-field" accept="image/*,video/*" multiple><div id="savedPostsList" style="margin-bottom: 12px;"></div><div style="display: flex; gap: 10px;"><button onclick="saveDayPost()" class="btn" id="savePostBtn">Änderungen speichern</button><button onclick="closeDayModal()" class="btn btn-secondary">Abbrechen</button></div></div></div>
+
+    <!-- MODAL: View Post -->
+    <div id="viewPostModal" class="modal"><div class="modal-content"><h3 id="viewPostTitle" style="margin-top: 0;">Beitrag</h3><div id="viewPostContent" style="margin-bottom: 16px;"></div><div style="display: flex; flex-direction: column; gap: 8px;"><div style="display: flex; gap: 10px;"><button onclick="editCurrentViewPost()" class="btn" style="background: #f1f5f9; color: var(--text-main); flex: 1;">✏️ Bearbeiten</button><button onclick="deleteCurrentViewPost()" class="btn" style="background: #fee2e2; color: #dc2626; flex: 1;">🗑️ Löschen</button></div><button onclick="closeViewPostModal()" class="btn btn-secondary">Schließen</button></div></div></div>
+
+    <!-- MODAL: Share Options (3 Szenarien) -->
+    <div id="shareAppModal" class="modal"><div class="modal-content" style="text-align: center;"><h3 style="margin-top: 0; margin-bottom: 8px;">BabySteps teilen</h3><p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;">Wähle aus, wen du einladen möchtest:</p><div style="display: flex; flex-direction: column; gap: 12px;"><div style="background: #f0fdf4; padding: 12px; border-radius: 12px; border: 1px solid #bbf7d0;"><div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">1. Partner / Mit-Elternteil 👩‍❤️‍👨</div><div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Gemeinsamer Zugriff auf euer Profil. (Nur 1x zahlen).</div><button onclick="shareAppViaWhatsApp('partner')" class="btn" style="background: #25D366; color: white; padding: 8px;">📲 Einladungslink senden</button></div><div style="background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;"><div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">2. Familie & Freunde 👨‍👩‍👧‍👦</div><div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Kostenloser Zugriff auf euer Kind. (Schwanger-Menü z.B. nur bei Freigabe sichtbar).</div><button onclick="shareAppViaWhatsApp('family')" class="btn" style="background: #25D366; color: white; padding: 8px;">📲 Gast-Link senden</button></div><div style="background: #fffbeb; padding: 12px; border-radius: 12px; border: 1px solid #fef3c7;"><div style="font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">3. App weiterempfehlen 🎁</div><div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">Für andere Eltern (Neues Konto): Sie erhalten 10% Rabatt, du 10% Cashback!</div><button onclick="shareAppViaWhatsApp('referral')" class="btn" style="background: #25D366; color: white; padding: 8px;">📲 Empfehlungslink senden</button></div><button onclick="closeShareModal()" class="btn btn-secondary" style="background: none; border: 1px solid var(--border-color); padding: 8px; font-size: 0.9rem; margin-top: 4px;">Abbrechen</button></div></div></div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav" id="mainBottomNav">
+        <button class="nav-item active" onclick="switchNav('mainAppScreen', this)"><span>🏠</span>Home</button>
+        <button class="nav-item" onclick="switchNav('galleryScreen', this)"><span>🖼️</span>Galerie</button>
+        <button class="nav-item" onclick="switchNav('growthScreen', this)"><span>📈</span>Größe</button>
+        <button class="nav-item" onclick="switchNav('sleepScreen', this)"><span>😴</span>Schlaf</button>
+        <button class="nav-item" id="navPregnancyItem" onclick="switchNav('pregnancyScreen', this)" style="display: none;"><span>🤰</span>Schwanger</button>
+        <button class="nav-item" onclick="switchNav('wishlistScreen', this)"><span>🎁</span>Wünsche</button>
+        <button class="nav-item" onclick="switchNav('gamesScreen', this)"><span>🎲</span>Spiele</button>
+        <button class="nav-item" onclick="switchNav('profileScreen', this)"><span>👤</span>Profil</button>
+        <button class="nav-item" onclick="switchNav('statsScreen', this)"><span>📊</span>Stats</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
