@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <head>
+    <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+        document.body.innerHTML = '<div style="background:#dc2626; color:white; padding:25px; position:fixed; top:0; left:0; right:0; z-index:9999; font-family:sans-serif; border-radius: 0 0 20px 20px;">' + 
+        '<h3 style="margin-top:0;">🚨 App-Absturz</h3>' + 
+        '<p><b>Fehler:</b> ' + message + '</p>' +
+        '<p><b>Zeile:</b> ' + lineno + '</p>' +
+        '</div>' + document.body.innerHTML;
+        return false;
+    };
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baby-Steps</title>
