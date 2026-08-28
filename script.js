@@ -361,7 +361,16 @@ const translations = {
 };
 
 
+const tutorialContent = {
+    de: [{ emoji: "👋", title: "Willkommen!", text: "Wähle deine Sprache aus." }, { emoji: "📖", title: "Los geht's", text: "Viel Spaß mit Baby-Steps!" }],
+    en: [{ emoji: "👋", title: "Welcome!", text: "Choose your language." }, { emoji: "📖", title: "Let's go", text: "Have fun!" }],
+    es: [{ emoji: "👋", title: "¡Bienvenido!", text: "Elige tu idioma." }, { emoji: "📖", title: "Vamos", text: "¡Diviértete!" }],
+    it: [{ emoji: "👋", title: "Benvenuto!", text: "Scegli la tua lingua." }, { emoji: "📖", title: "Andiamo", text: "Divertiti!" }],
+    fr: [{ emoji: "👋", title: "Bienvenue!", text: "Choisis ta langue." }, { emoji: "📖", title: "C'est parti", text: "Amuse-toi bien!" }]
+};
+
 let currentTutorialStep = 0;
+
 
 function checkFirstVisit() {
     let visited = localStorage.getItem('request_tutorial_seen');
