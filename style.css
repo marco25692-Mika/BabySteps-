@@ -258,19 +258,23 @@ body {
 }
 
 /* ========================================== */
-/* DESIGN: TOP BAR TRANSPARENT & ZENTRIERT    */
+/* DESIGN: TOP BAR & ÜBERSCHRIFTEN TRANSPARENT*/
 /* ========================================== */
 .top-bar {
     justify-content: center !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    backdrop-filter: none !important;
-    border-radius: 0 !important;
+    background: rgba(255, 255, 255, 0.08) !important; /* Exakt 90% transparent wie die Widgets */
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    border-radius: 28px !important;
     position: relative;
-    padding-top: 15px !important;
+    padding: 14px 16px !important;
+    margin-bottom: 20px !important;
 }
 .top-title {
     font-size: 1.5rem !important;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.8) !important; /* Leichter Schatten für Lesbarkeit */
 }
 .top-bar-right {
     position: absolute;
@@ -278,6 +282,44 @@ body {
     display: flex;
     align-items: center;
 }
+
+/* Hintergrund für die "Guten Morgen" Begrüßung */
+.welcome-header {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    padding: 8px 18px !important;
+    border-radius: 28px !important;
+    display: inline-block !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.8) !important; 
+    margin-bottom: 12px !important;
+}
+
+/* Passt auch das Testversions-Banner exakt an die Kacheln an */
+#trialBannerContainer > div {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(2px) !important;
+    -webkit-backdrop-filter: blur(2px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 28px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.8) !important;
+}
+
+
+/* Hintergrund für die "Guten Morgen" Begrüßung */
+.welcome-header {
+    background: rgba(255, 255, 255, 0.92) !important;
+    padding: 8px 18px !important;
+    border-radius: 20px !important;
+    display: inline-block !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08) !important;
+    text-shadow: none !important; /* Schatten wird nicht mehr gebraucht */
+    margin-bottom: 12px !important;
+}
+
 /* ========================================== */
 /* FIX: KALENDER & ZYKLUS-SLIDER LAYOUT       */
 /* ========================================== */
